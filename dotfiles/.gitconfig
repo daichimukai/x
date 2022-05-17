@@ -1,0 +1,32 @@
+[user]
+  name = Daichi Mukai
+  email = daichi@mukai.dev
+
+[core]
+  whitespace = trailing-space
+  editor = vim
+
+[color]
+  status = auto
+  diff = auto
+  branch = auto
+  interactive = auto
+  grep = auto
+
+[pull]
+  rebase = true
+
+[push]
+  default = simple
+
+[alias]
+  graph = log --graph --date=short --decorate=short --pretty=format:'%Cgreen%h %Creset%cd %Cblue%cn %Cred%d %Creset%s'
+  gr = log --graph --date=short --decorate=short --pretty=format:'%Cgreen%h %Creset%cd %Cblue%cn %Cred%d %Creset%s'
+  st = status
+  stt = status -uno
+  cm = commit
+  difff = diff --word-diff
+  co = checkout
+
+[url "git@github.com:"]
+	insteadOf = https://github.com/
