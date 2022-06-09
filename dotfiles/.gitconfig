@@ -3,6 +3,7 @@
   email = daichi@mukai.dev
 
 [core]
+  abbrev = 12
   whitespace = trailing-space
   editor = vim
 
@@ -12,6 +13,9 @@
   branch = auto
   interactive = auto
   grep = auto
+
+[pretty]
+  fixes = Fixes: %h (\"%s\")
 
 [pull]
   rebase = true
