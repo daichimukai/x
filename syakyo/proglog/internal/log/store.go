@@ -15,6 +15,7 @@ const (
 	lenWidth = 8
 )
 
+// store saves the records.
 type store struct {
 	*os.File
 	mu   sync.Mutex
