@@ -6,6 +6,7 @@ import (
 	"time"
 
 	. "github.com/daichimukai/x/syakyo/proglog/internal/discovery"
+	"github.com/daichimukai/x/syakyo/proglog/internal/testutils"
 	"github.com/hashicorp/serf/serf"
 	"github.com/stretchr/testify/require"
 )
@@ -33,8 +34,8 @@ func TestMembership(t *testing.T) {
 
 func setupMember(t *testing.T, members []*Membership) ([]*Membership, *handler) {
 	id := len(members)
-	port := 10000 + id
-	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	port := testutils.GetFreePort()
+	addr := fmt.Sprintf("127.0.0.1:%s", port)
 	tags := map[string]string{
 		"rpc_addr": addr,
 	}

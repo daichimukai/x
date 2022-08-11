@@ -12,9 +12,11 @@ import (
 
 	"github.com/daichimukai/x/syakyo/proglog/internal/agent"
 	"github.com/daichimukai/x/syakyo/proglog/internal/config"
+	"github.com/daichimukai/x/syakyo/proglog/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 func TestAgent(t *testing.T) {
@@ -38,8 +40,8 @@ func TestAgent(t *testing.T) {
 
 	var agents []*agent.Agent
 	for i := 0; i < 3; i++ {
-		port := 10000 + 2*i
-		bindAddr := fmt.Sprintf("%s:%d", "127.0.0.1", port)
+		port := testutils.GetFreePort()
+		bindAddr := fmt.Sprintf("%s:%s", "127.0.0.1", port)
 		rpcPort := 10001 + 2*i
 
 		dataDir, err := os.MkdirTemp("", "agent-test-log")
@@ -60,6 +62,7 @@ func TestAgent(t *testing.T) {
 			ACLPolicyFile:   config.ACLPolicyFile,
 			ServerTLSConfig: serverTLSConfig,
 			PeerTLSConfig:   peerTLSConfig,
+			Bootstrap:       i == 0,
 		})
 		require.NoError(t, err)
 
@@ -108,6 +111,18 @@ func TestAgent(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, consumeResponse.Record.Value, []byte("foo"))
+
+	// Check that replication is not "cycling", i.e., the replicated record
+	// won't be replicated back to the source node.
+	consumeResponse, err = leaderClient.Consume(
+		context.Background(),
+		&apiv1.ConsumeRequest{
+			Offset: produceResponse.Offset + 1,
+		},
+	)
+	require.Nil(t, consumeResponse)
+	require.Error(t, err)
+	require.Equal(t, status.Code(apiv1.ErrOffsetOutOfRange{}.GRPCStatus().Err()), status.Code(err))
 }
 
 func client(t *testing.T, agent *agent.Agent, tlsConfig *tls.Config) apiv1.LogClient {
