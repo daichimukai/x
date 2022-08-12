@@ -28,7 +28,6 @@ type Agent struct {
 	log        *log.DistributedLog
 	server     *grpc.Server
 	membership *discovery.Membership
-	// replicator *log.Replicator
 
 	shutdownLock sync.Mutex
 	shutdown     bool
@@ -129,8 +128,9 @@ func (a *Agent) setupServer() error {
 		a.Config.ACLPolicyFile,
 	)
 	serverConfig := &server.Config{
-		CommitLog:  a.log,
-		Authorizer: authorizer,
+		CommitLog:   a.log,
+		Authorizer:  authorizer,
+		GetServerer: a.log,
 	}
 	var opts []grpc.ServerOption
 	if a.Config.ServerTLSConfig != nil {

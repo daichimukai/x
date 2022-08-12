@@ -12,6 +12,7 @@ import (
 
 	"github.com/daichimukai/x/syakyo/proglog/internal/agent"
 	"github.com/daichimukai/x/syakyo/proglog/internal/config"
+	"github.com/daichimukai/x/syakyo/proglog/internal/loadbalance"
 	"github.com/daichimukai/x/syakyo/proglog/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -131,7 +132,7 @@ func client(t *testing.T, agent *agent.Agent, tlsConfig *tls.Config) apiv1.LogCl
 	rpcAddr, err := agent.Config.RPCAddr()
 	require.NoError(t, err)
 
-	conn, err := grpc.Dial(rpcAddr, opts...)
+	conn, err := grpc.Dial(fmt.Sprintf("%s://%s", loadbalance.Name, rpcAddr), opts...)
 	require.NoError(t, err)
 
 	client := apiv1.NewLogClient(conn)
