@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -43,7 +44,7 @@ func TestAgent(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		port := testutils.GetFreePort()
 		bindAddr := fmt.Sprintf("%s:%s", "127.0.0.1", port)
-		rpcPort := 10001 + 2*i
+		rpcPort, _ := strconv.Atoi(testutils.GetFreePort())
 
 		dataDir, err := os.MkdirTemp("", "agent-test-log")
 		require.NoError(t, err)
@@ -80,7 +81,7 @@ func TestAgent(t *testing.T) {
 	}()
 
 	// wait for agents construct a cluster
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(3000 * time.Millisecond)
 
 	leaderClient := client(t, agents[0], peerTLSConfig)
 	produceResponse, err := leaderClient.Produce(context.Background(), &apiv1.ProduceRequest{

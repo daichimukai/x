@@ -43,3 +43,24 @@ ${CONFIG_PATH}/model.conf: test/model.conf
 
 ${CONFIG_PATH}/policy.csv: test/policy.csv
 	@cp $< $@
+
+TAG ?= 0.1.0
+
+CONTAINER_NAME := github.com/daichimukai/x/syakyo/proglog
+
+.PHONY: build-container
+build-container:
+	@docker build -t $(CONTAINER_NAME):$(TAG) .
+
+
+.PHONY: create-cluster
+create-cluster: build-container
+	@kind create cluster
+	@kind load docker-image $(CONTAINER_NAME):$(TAG)
+
+.PHONY: delete-cluster
+delete-cluster:
+	@kind delete cluster
+
+.PHONY: clean
+clean: delete-cluster
