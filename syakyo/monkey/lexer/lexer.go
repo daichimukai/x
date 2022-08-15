@@ -16,6 +16,12 @@ func New(input string) *Lexer {
 	return l
 }
 
+func (l *Lexer) skipWhitespaces() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		l.ch = 0
@@ -40,18 +46,51 @@ var byteToTokenTypeMap map[byte]token.TokenType = map[byte]token.TokenType{
 
 // NextToken returns the next token from the input.
 func (l *Lexer) NextToken() token.Token {
-	var tok token.Token
+	l.skipWhitespaces()
 
-	var ok bool
-	if tok.Type, ok = byteToTokenTypeMap[l.ch]; !ok {
-		return tok
-	}
-	if tok.Type != token.TypeEof {
-		tok.Literal = string(l.ch)
-	} else {
-		tok.Literal = ""
+	var typ token.TokenType
+	var literal string
+	if l.ch == 0 {
+		literal = ""
+		typ = token.TypeEof
+	} else if v, ok := byteToTokenTypeMap[l.ch]; ok {
+		literal = string(l.ch)
+		typ = v
+		l.readChar()
+	} else if isLetter(l.ch) {
+		literal = l.readIdentifier()
+		typ = token.LookupIdent(literal)
+	} else if isDigit(l.ch) {
+		literal = l.readNumber()
+		typ = token.TypeInt
 	}
 
-	l.readChar()
-	return tok
+	return token.Token{
+		Type:    typ,
+		Literal: literal,
+	}
+}
+
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
 }

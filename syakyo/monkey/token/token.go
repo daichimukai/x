@@ -2,13 +2,6 @@ package token
 
 type TokenType uint
 
-// Token represents a token of the language.
-// The zero value is a illegal token.
-type Token struct {
-	Type    TokenType
-	Literal string
-}
-
 const (
 	// TypeIllegal means that the token is illegal.
 	TypeIllegal TokenType = iota
@@ -43,3 +36,22 @@ const (
 	// TypeLeft represents the keyword "let"
 	TypeLet
 )
+
+// Token represents a token of the language.
+// The zero value is a illegal token.
+type Token struct {
+	Type    TokenType
+	Literal string
+}
+
+var keywords map[string]TokenType = map[string]TokenType{
+	"fn":  TypeFunction,
+	"let": TypeLet,
+}
+
+func LookupIdent(ident string) TokenType {
+	if typ, ok := keywords[ident]; ok {
+		return typ
+	}
+	return TypeIdent
+}
