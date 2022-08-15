@@ -17,6 +17,18 @@ const (
 	TypeAssign
 	// TypePlus represents the operator "+"
 	TypePlus
+	// TypeMinus represents the operator "-"
+	TypeMinus
+	// TypeBang represents the operator "!"
+	TypeBang
+	// TypeAsterisk represents the operator "*"
+	TypeAsterisk
+	// TypeSlash represents the operator "/"
+	TypeSlash
+	// TypeLt represents the operator "<"
+	TypeLt
+	// TypeGt represents the operator ">"
+	TypeGt
 
 	// TypeComma represents the delimiter ","
 	TypeComma

@@ -14,19 +14,25 @@ func TestNextToken_SingleToken(t *testing.T) {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
-		"eof":         {"", token.TypeEof, ""},
-		"ident":       {"foo", token.TypeIdent, "foo"},
-		"int":         {"0", token.TypeInt, "0"},
-		"assign":      {"=", token.TypeAssign, "="},
-		"plus":        {"+", token.TypePlus, "+"},
-		"comma":       {",", token.TypeComma, ","},
-		"semicolon":   {";", token.TypeSemicolon, ";"},
-		"left paren":  {"(", token.TypeLeftParen, "("},
-		"right paren": {")", token.TypeRightParen, ")"},
-		"left brace":  {"{", token.TypeLeftBrace, "{"},
-		"right brace": {"}", token.TypeRightBrace, "}"},
-		"function":    {"fn", token.TypeFunction, "fn"},
-		"let":         {"let", token.TypeLet, "let"},
+		"eof":          {"", token.TypeEof, ""},
+		"ident":        {"foo", token.TypeIdent, "foo"},
+		"int":          {"0", token.TypeInt, "0"},
+		"assign":       {"=", token.TypeAssign, "="},
+		"plus":         {"+", token.TypePlus, "+"},
+		"minus":        {"-", token.TypeMinus, "-"},
+		"bang":         {"!", token.TypeBang, "!"},
+		"asterisk":     {"*", token.TypeAsterisk, "*"},
+		"slash":        {"/", token.TypeSlash, "/"},
+		"less than":    {"<", token.TypeLt, "<"},
+		"greater than": {">", token.TypeGt, ">"},
+		"comma":        {",", token.TypeComma, ","},
+		"semicolon":    {";", token.TypeSemicolon, ";"},
+		"left paren":   {"(", token.TypeLeftParen, "("},
+		"right paren":  {")", token.TypeRightParen, ")"},
+		"left brace":   {"{", token.TypeLeftBrace, "{"},
+		"right brace":  {"}", token.TypeRightBrace, "}"},
+		"function":     {"fn", token.TypeFunction, "fn"},
+		"let":          {"let", token.TypeLet, "let"},
 	}
 
 	for name, tt := range testCases {

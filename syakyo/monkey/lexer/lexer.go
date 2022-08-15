@@ -35,13 +35,18 @@ func (l *Lexer) readChar() {
 var byteToTokenTypeMap map[byte]token.TokenType = map[byte]token.TokenType{
 	'=': token.TypeAssign,
 	'+': token.TypePlus,
+	'-': token.TypeMinus,
+	'!': token.TypeBang,
+	'*': token.TypeAsterisk,
+	'/': token.TypeSlash,
+	'<': token.TypeLt,
+	'>': token.TypeGt,
 	'(': token.TypeLeftParen,
 	')': token.TypeRightParen,
 	'{': token.TypeLeftBrace,
 	'}': token.TypeRightBrace,
 	',': token.TypeComma,
 	';': token.TypeSemicolon,
-	0:   token.TypeEof,
 }
 
 // NextToken returns the next token from the input.
