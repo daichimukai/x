@@ -29,6 +29,10 @@ const (
 	TypeLt
 	// TypeGt represents the operator ">"
 	TypeGt
+	// TypeEq represents the operator "=="
+	TypeEq
+	// TypeNotEq represents the operator "!="
+	TypeNotEq
 
 	// TypeComma represents the delimiter ","
 	TypeComma

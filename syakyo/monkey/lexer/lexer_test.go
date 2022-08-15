@@ -25,6 +25,8 @@ func TestNextToken_SingleToken(t *testing.T) {
 		"slash":        {"/", token.TypeSlash, "/"},
 		"less than":    {"<", token.TypeLt, "<"},
 		"greater than": {">", token.TypeGt, ">"},
+		"equal":        {"==", token.TypeEq, "=="},
+		"not equal":    {"!=", token.TypeNotEq, "!="},
 		"comma":        {",", token.TypeComma, ","},
 		"semicolon":    {";", token.TypeSemicolon, ";"},
 		"left paren":   {"(", token.TypeLeftParen, "("},

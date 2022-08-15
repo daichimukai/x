@@ -1,6 +1,8 @@
 package lexer
 
-import "github.com/daichimukai/x/syakyo/monkey/token"
+import (
+	"github.com/daichimukai/x/syakyo/monkey/token"
+)
 
 type Lexer struct {
 	input        string
@@ -32,6 +34,18 @@ func (l *Lexer) readChar() {
 	l.readPosition++
 }
 
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	}
+	return l.input[l.readPosition]
+}
+
+var twoByteTokens map[string]token.TokenType = map[string]token.TokenType{
+	"==": token.TypeEq,
+	"!=": token.TypeNotEq,
+}
+
 var byteToTokenTypeMap map[byte]token.TokenType = map[byte]token.TokenType{
 	'=': token.TypeAssign,
 	'+': token.TypePlus,
@@ -58,6 +72,11 @@ func (l *Lexer) NextToken() token.Token {
 	if l.ch == 0 {
 		literal = ""
 		typ = token.TypeEof
+	} else if v, ok := twoByteTokens[string(l.ch)+string(l.peekChar())]; ok {
+		literal = string(l.ch) + string(l.peekChar())
+		typ = v
+		l.readChar()
+		l.readChar()
 	} else if v, ok := byteToTokenTypeMap[l.ch]; ok {
 		literal = string(l.ch)
 		typ = v
