@@ -33,6 +33,11 @@ func TestNextToken_SingleToken(t *testing.T) {
 		"right brace":  {"}", token.TypeRightBrace, "}"},
 		"function":     {"fn", token.TypeFunction, "fn"},
 		"let":          {"let", token.TypeLet, "let"},
+		"true":         {"true", token.TypeTrue, "true"},
+		"false":        {"false", token.TypeFalse, "false"},
+		"if":           {"if", token.TypeIf, "if"},
+		"else":         {"else", token.TypeElse, "else"},
+		"return":       {"return", token.TypeReturn, "return"},
 	}
 
 	for name, tt := range testCases {

@@ -47,6 +47,16 @@ const (
 	TypeFunction
 	// TypeLeft represents the keyword "let"
 	TypeLet
+	// TypeTrue represents the keyword "true"
+	TypeTrue
+	// TypeFalse represents the keyword "false"
+	TypeFalse
+	// TypeIf represents the keyword "if"
+	TypeIf
+	// TypeElse represents the keyword "else"
+	TypeElse
+	// TypeReturn represents the keyword "return"
+	TypeReturn
 )
 
 // Token represents a token of the language.
@@ -57,8 +67,13 @@ type Token struct {
 }
 
 var keywords map[string]TokenType = map[string]TokenType{
-	"fn":  TypeFunction,
-	"let": TypeLet,
+	"fn":     TypeFunction,
+	"let":    TypeLet,
+	"true":   TypeTrue,
+	"false":  TypeFalse,
+	"if":     TypeIf,
+	"else":   TypeElse,
+	"return": TypeReturn,
 }
 
 func LookupIdent(ident string) TokenType {
