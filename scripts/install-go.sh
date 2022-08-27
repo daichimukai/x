@@ -1,9 +1,11 @@
 #!/bin/bash
-
+#
 # download and install Go
 # link: https://go.dev/doc/install
 
 set -euo pipefail
+
+TARGET_DIR=${TARGET_DIR:-"/usr/local"}
 
 if [ "$(id -u)" != "0" ]; then
 	echo "Error: run as root" >&2
@@ -22,8 +24,7 @@ trap "rm -r ${tmp}" EXIT SIGHUP SIGINT SIGQUIT SIGTERM
 url="https://go.dev/dl/go${version}.linux-amd64.tar.gz"
 curl -o ${tmp} -sSLf ${url}
 
-target_dir="/usr/local"
-go_dir="${target_dir}/go"
+go_dir="${TARGET_DIR}/go"
 
 rm -rf ${go_dir}
-tar -C ${target_dir} -xzf ${tmp}
+tar -C ${TARGET_DIR} -xzf ${tmp}
