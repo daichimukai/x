@@ -38,3 +38,21 @@ func TestLetStatement(t *testing.T) {
 		})
 	}
 }
+
+func TestReturnStatement(t *testing.T) {
+	input := `
+return 5;
+`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	program, err := p.ParseProgram()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(program.Statements))
+
+	s := program.Statements[0]
+	require.Equal(t, "return", s.TokenLiteral())
+	_, ok := s.(*ast.ReturnStatement)
+	require.True(t, ok)
+}

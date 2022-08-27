@@ -48,6 +48,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	switch p.curToken.Type {
 	case token.TypeLet:
 		return p.parseLetStatement()
+	case token.TypeReturn:
+		return p.parseReturnStatement()
 	}
 	return nil, fmt.Errorf("unexpected token: %s", p.curToken.Literal)
 }
@@ -65,6 +67,19 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 	}
 
 	// TODO: for now, skip while got semicolon
+	for p.curToken.Type != token.TypeSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
+	stmt := &ast.ReturnStatement{Token: p.curToken}
+
+	p.nextToken()
+
+	// TODO: for now, skip until semicolon
 	for p.curToken.Type != token.TypeSemicolon {
 		p.nextToken()
 	}
