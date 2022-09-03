@@ -308,6 +308,22 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			input:  "3 + 4 * 5 == 3 * 1 + 4 * 5",
 			expect: "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
 		},
+		{
+			input:  "1 + (2 + 3) + 4",
+			expect: "((1 + (2 + 3)) + 4)",
+		},
+		{
+			input:  "(5 + 5) * 2",
+			expect: "((5 + 5) * 2)",
+		},
+		{
+			input:  "-(5 + 5)",
+			expect: "(-(5 + 5))",
+		},
+		{
+			input:  "!(true == true)",
+			expect: "(!(true == true))",
+		},
 	}
 
 	for _, tt := range testcases {
