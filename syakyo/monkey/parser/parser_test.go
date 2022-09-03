@@ -70,10 +70,40 @@ func TestIdentifier(t *testing.T) {
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	require.True(t, ok)
 
-	ident, ok := stmt.Expression.(*ast.Identifier)
+	testIdentifier(t, "foobar", stmt.Expression)
+}
+
+func testIdentifier(t *testing.T, value string, exp ast.Expression) {
+	ident, ok := exp.(*ast.Identifier)
 	require.True(t, ok)
-	require.Equal(t, "foobar", ident.Value)
-	require.Equal(t, "foobar", ident.TokenLiteral())
+	require.Equal(t, value, ident.Value)
+	require.Equal(t, value, ident.TokenLiteral())
+}
+
+func TestBooleanExpression(t *testing.T) {
+	testcases := map[string]struct {
+		input  string
+		expect bool
+	}{
+		"true": {
+			input:  `true;`,
+			expect: true,
+		},
+		"false": {
+			input:  `false;`,
+			expect: false,
+		},
+	}
+
+	for scenario, tt := range testcases {
+		t.Run(scenario, func(t *testing.T) {
+			program := parseProgram(t, tt.input)
+			require.Equal(t, 1, len(program.Statements))
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			require.True(t, ok)
+			testLiteralExpression(t, tt.expect, stmt.Expression)
+		})
+	}
 }
 
 func TestIntegralLiteralExpression(t *testing.T) {
@@ -88,32 +118,65 @@ func TestIntegralLiteralExpression(t *testing.T) {
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	require.True(t, ok)
 
-	literal, ok := stmt.Expression.(*ast.IntegerLiteral)
+	testLiteralExpression(t, 5, stmt.Expression)
+}
+
+func testBoolean(t *testing.T, expected bool, exp ast.Expression) {
+	t.Helper()
+
+	b, ok := exp.(*ast.Boolean)
 	require.True(t, ok)
-	require.Equal(t, int64(5), literal.Value)
-	require.Equal(t, "5", literal.TokenLiteral())
+	require.Equal(t, expected, b.Value)
+	require.Equal(t, fmt.Sprintf("%t", expected), b.TokenLiteral())
+}
+
+func testLiteralExpression(t *testing.T, expected interface{}, exp ast.Expression) {
+	t.Helper()
+
+	switch v := expected.(type) {
+	case int:
+		testIntegerLiteral(t, int64(v), exp)
+	case int64:
+		testIntegerLiteral(t, v, exp)
+	case string:
+		testIdentifier(t, v, exp)
+	case bool:
+		testBoolean(t, v, exp)
+	default:
+		t.Fatalf("bug: unknown type: %q", expected)
+	}
 }
 
 func TestParsingPrefixExpression(t *testing.T) {
-	testcases := map[string]struct {
-		input        string
-		operator     string
-		integerValue int64
+	testcases := []struct {
+		input    string
+		operator string
+		expected interface{}
 	}{
-		"parse !5;": {
-			input:        "!5;",
-			operator:     "!",
-			integerValue: 5,
+		{
+			input:    "!5;",
+			operator: "!",
+			expected: 5,
 		},
-		"parse -15;": {
-			input:        "-15;",
-			operator:     "-",
-			integerValue: 15,
+		{
+			input:    "-15;",
+			operator: "-",
+			expected: 15,
+		},
+		{
+			input:    "!true;",
+			operator: "!",
+			expected: true,
+		},
+		{
+			input:    "!false;",
+			operator: "!",
+			expected: false,
 		},
 	}
 
-	for scenario, tt := range testcases {
-		t.Run(scenario, func(t *testing.T) {
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
 			l := lexer.New(tt.input)
 			p := parser.New(l)
 			program, err := p.ParseProgram()
@@ -126,7 +189,7 @@ func TestParsingPrefixExpression(t *testing.T) {
 			expr, ok := stmt.Expression.(*ast.PrefixExpression)
 			require.True(t, ok)
 			require.Equal(t, tt.operator, expr.Operator)
-			testIntegerLiteral(t, tt.integerValue, expr.Right)
+			testLiteralExpression(t, tt.expected, expr.Right)
 		})
 	}
 }
@@ -139,24 +202,27 @@ func testIntegerLiteral(t *testing.T, expect int64, il ast.Expression) {
 }
 
 func TestParsingInfixExpressions(t *testing.T) {
-	testcases := map[string]struct {
+	testcases := []struct {
 		input      string
-		leftValue  int64
+		leftValue  interface{}
 		operator   string
-		rightValue int64
+		rightValue interface{}
 	}{
-		"plus":  {"5 + 5;", 5, "+", 5},
-		"minus": {"5 - 5;", 5, "-", 5},
-		"mult":  {"5 * 5;", 5, "*", 5},
-		"div":   {"5 / 5;", 5, "/", 5},
-		"gt":    {"5 > 5;", 5, ">", 5},
-		"lt":    {"5 < 5;", 5, "<", 5},
-		"eq":    {"5 == 5;", 5, "==", 5},
-		"neq":   {"5 != 5;", 5, "!=", 5},
+		{"5 + 5;", 5, "+", 5},
+		{"5 - 5;", 5, "-", 5},
+		{"5 * 5;", 5, "*", 5},
+		{"5 / 5;", 5, "/", 5},
+		{"5 > 5;", 5, ">", 5},
+		{"5 < 5;", 5, "<", 5},
+		{"5 == 5;", 5, "==", 5},
+		{"5 != 5;", 5, "!=", 5},
+		{"true == true", true, "==", true},
+		{"false != false", false, "!=", false},
+		{"false == false", false, "==", false},
 	}
 
-	for scenario, tt := range testcases {
-		t.Run(scenario, func(t *testing.T) {
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
 			program := parseProgram(t, tt.input)
 			require.Equal(t, 1, len(program.Statements))
 
@@ -166,8 +232,8 @@ func TestParsingInfixExpressions(t *testing.T) {
 			exp, ok := stmt.Expression.(*ast.InfixExpression)
 			require.True(t, ok)
 
-			testIntegerLiteral(t, tt.leftValue, exp.Left)
-			testIntegerLiteral(t, tt.rightValue, exp.Right)
+			testLiteralExpression(t, tt.leftValue, exp.Left)
+			testLiteralExpression(t, tt.rightValue, exp.Right)
 			require.Equal(t, tt.operator, exp.Operator)
 		})
 	}
@@ -178,6 +244,22 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		input  string
 		expect string
 	}{
+		{
+			input:  "true",
+			expect: "true",
+		},
+		{
+			input:  "false",
+			expect: "false",
+		},
+		{
+			input:  "3 > 5 == false",
+			expect: "((3 > 5) == false)",
+		},
+		{
+			input:  "3 < 5 == true",
+			expect: "((3 < 5) == true)",
+		},
 		{
 			input:  "-a * b",
 			expect: "((-a) * b)",
