@@ -59,6 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.TypeMinus, p.parsePrefixExpression)
 	p.registerPrefix(token.TypeBang, p.parsePrefixExpression)
 	p.registerPrefix(token.TypeLeftParen, p.parseGroupedExpression)
+	p.registerPrefix(token.TypeIf, p.parseIfExpression)
 
 	p.registerInfix(token.TypePlus, p.parseInfixExpression)
 	p.registerInfix(token.TypeMinus, p.parseInfixExpression)
@@ -240,6 +241,50 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	}
 
 	return exp
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expr := &ast.IfExpression{
+		Token: p.curToken,
+	}
+
+	if !p.expectPeek(token.TypeLeftParen) {
+		return nil
+	}
+	p.nextToken()
+	expr.Condition = p.parseExpression(priorityLowest)
+	if !p.expectPeek(token.TypeRightParen) {
+		return nil
+	}
+
+	if !p.expectPeek(token.TypeLeftBrace) {
+		return nil
+	}
+	expr.Consequence = p.parseBlockStatement()
+	if p.peekToken.Type == token.TypeElse {
+		p.nextToken()
+		if !p.expectPeek(token.TypeLeftBrace) {
+			return nil
+		}
+		expr.Alternative = p.parseBlockStatement()
+	}
+
+	return expr
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{
+		Token: p.curToken,
+	}
+	p.nextToken()
+
+	for p.curToken.Type != token.TypeRightBrace && p.curToken.Type != token.TypeEof {
+		if stmt, err := p.parseStatement(); err == nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+	return block
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {

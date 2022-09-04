@@ -147,6 +147,52 @@ func testLiteralExpression(t *testing.T, expected interface{}, exp ast.Expressio
 	}
 }
 
+func TestIfExpression(t *testing.T) {
+	input := `if (x < y) { x }`
+
+	program := parseProgram(t, input)
+	require.Equal(t, 1, len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	exp, ok := stmt.Expression.(*ast.IfExpression)
+	require.True(t, ok)
+
+	require.Equal(t, 1, len(exp.Consequence.Statements))
+	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	testInfixExpression(t, "x", "<", "y", exp.Condition)
+	testIdentifier(t, "x", consequence.Expression)
+	require.Nil(t, exp.Alternative)
+}
+
+func TestIfElseExpression(t *testing.T) {
+	input := `if (x < y) { x } else { y }`
+
+	program := parseProgram(t, input)
+	require.Equal(t, 1, len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	exp, ok := stmt.Expression.(*ast.IfExpression)
+	require.True(t, ok)
+
+	require.Equal(t, 1, len(exp.Consequence.Statements))
+	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	require.Equal(t, 1, len(exp.Alternative.Statements))
+	alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	testInfixExpression(t, "x", "<", "y", exp.Condition)
+	testIdentifier(t, "x", consequence.Expression)
+	testIdentifier(t, "y", alternative.Expression)
+}
+
 func TestParsingPrefixExpression(t *testing.T) {
 	testcases := []struct {
 		input    string
@@ -229,14 +275,22 @@ func TestParsingInfixExpressions(t *testing.T) {
 			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 			require.True(t, ok)
 
-			exp, ok := stmt.Expression.(*ast.InfixExpression)
-			require.True(t, ok)
-
-			testLiteralExpression(t, tt.leftValue, exp.Left)
-			testLiteralExpression(t, tt.rightValue, exp.Right)
-			require.Equal(t, tt.operator, exp.Operator)
+			testInfixExpression(t, tt.leftValue, tt.operator, tt.rightValue, stmt.Expression)
 		})
 	}
+}
+
+func testInfixExpression(
+	t *testing.T,
+	left interface{}, operator string, right interface{},
+	exp ast.Expression,
+) {
+	infix, ok := exp.(*ast.InfixExpression)
+	require.True(t, ok)
+
+	testLiteralExpression(t, left, infix.Left)
+	testLiteralExpression(t, right, infix.Right)
+	require.Equal(t, operator, infix.Operator)
 }
 
 func TestOperatorPrecedenceParsing(t *testing.T) {
