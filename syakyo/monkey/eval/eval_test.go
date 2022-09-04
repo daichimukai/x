@@ -33,6 +33,45 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestEvalBangOperator(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect bool
+	}{
+		{
+			input:  `!true`,
+			expect: false,
+		},
+		{
+			input:  `!false`,
+			expect: true,
+		},
+		{
+			input:  `!5`,
+			expect: false,
+		},
+		{
+			input:  `!!true`,
+			expect: true,
+		},
+		{
+			input:  `!!false`,
+			expect: false,
+		},
+		{
+			input:  `!!5`,
+			expect: true,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+			testBooleanObject(t, tt.expect, evaluated)
+		})
+	}
+}
+
 func testEval(t *testing.T, input string) object.Object {
 	t.Helper()
 	l := lexer.New(input)
@@ -47,4 +86,9 @@ func testIntegerObject(t *testing.T, expect int64, obj object.Object) {
 	result, ok := obj.(*object.Integer)
 	require.True(t, ok)
 	require.Equal(t, expect, result.Value)
+}
+
+func testBooleanObject(t *testing.T, expect bool, obj object.Object) {
+	t.Helper()
+	require.Equal(t, object.BooleanFromNative(expect), obj)
 }
