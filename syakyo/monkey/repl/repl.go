@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/daichimukai/x/syakyo/monkey/lexer"
-	"github.com/daichimukai/x/syakyo/monkey/token"
+	"github.com/daichimukai/x/syakyo/monkey/parser"
 )
 
 const prompt = "monkey> "
@@ -23,9 +23,15 @@ func Start(in io.Reader, out io.Writer) {
 
 		line := scanner.Text()
 		l := lexer.New(line)
+		p := parser.New(l)
 
-		for tok := l.NextToken(); tok.Type != token.TypeEof; tok = l.NextToken() {
-			fmt.Printf("%+v\n", tok)
+		program, err := p.ParseProgram()
+		if err != nil {
+			io.WriteString(out, fmt.Sprintf("parse error: %+s\n", err))
+			continue
 		}
+
+		io.WriteString(out, program.String())
+		io.WriteString(out, "\n")
 	}
 }
