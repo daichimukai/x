@@ -193,6 +193,66 @@ func TestIfElseExpression(t *testing.T) {
 	testIdentifier(t, "y", alternative.Expression)
 }
 
+func TestFunctionLiteral(t *testing.T) {
+	input := `fn(x, y) { x + y; }`
+
+	program := parseProgram(t, input)
+	require.Equal(t, 1, len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	function, ok := stmt.Expression.(*ast.FunctionLiteral)
+	require.True(t, ok)
+
+	require.Equal(t, 2, len(function.Parameters))
+	testLiteralExpression(t, "x", function.Parameters[0])
+	testLiteralExpression(t, "y", function.Parameters[1])
+
+	require.Equal(t, 1, len(function.Body.Statements))
+	bodyStmt, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+	testInfixExpression(t, "x", "+", "y", bodyStmt.Expression)
+}
+
+func TestFunctionParameters(t *testing.T) {
+	testcases := []struct {
+		input    string
+		expected []string
+	}{
+		{
+			input:    `fn() {};`,
+			expected: nil,
+		},
+		{
+			input:    `fn(x) {};`,
+			expected: []string{"x"},
+		},
+		{
+			input:    `fn(x,y) {};`,
+			expected: []string{"x", "y"},
+		},
+		{
+			input:    `fn(x,y,z) {};`,
+			expected: []string{"x", "y", "z"},
+		},
+	}
+
+	for _, tt := range testcases {
+		program := parseProgram(t, tt.input)
+		require.Equal(t, 1, len(program.Statements))
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		require.True(t, ok)
+		function, ok := stmt.Expression.(*ast.FunctionLiteral)
+		require.True(t, ok)
+
+		require.Equal(t, len(tt.expected), len(function.Parameters))
+		for i := 0; i < len(tt.expected); i++ {
+			testLiteralExpression(t, tt.expected[i], function.Parameters[i])
+		}
+	}
+}
+
 func TestParsingPrefixExpression(t *testing.T) {
 	testcases := []struct {
 		input    string
