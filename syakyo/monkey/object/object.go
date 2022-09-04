@@ -24,14 +24,29 @@ type Integer struct {
 func (i *Integer) Type() ObjectType { return IntegerObjectType }
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 
-type Boolean struct {
+var (
+	True  = &boolean{Value: true}
+	False = &boolean{Value: false}
+)
+
+func BooleanFromNative(b bool) *boolean {
+	if b {
+		return True
+	} else {
+		return False
+	}
+}
+
+type boolean struct {
 	Value bool
 }
 
-func (b *Boolean) Type() ObjectType { return BooleanObjectType }
-func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
+func (b *boolean) Type() ObjectType { return BooleanObjectType }
+func (b *boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
 
-type Null struct{}
+var Null = &null{}
 
-func (n *Null) Type() ObjectType { return NullObjectType }
-func (n *Null) Inspect() string  { return "null" }
+type null struct{}
+
+func (n *null) Type() ObjectType { return NullObjectType }
+func (n *null) Inspect() string  { return "null" }
