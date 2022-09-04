@@ -21,14 +21,15 @@ const (
 )
 
 var precedences = map[token.TokenType]int{
-	token.TypeEq:       priorityEquals,
-	token.TypeNotEq:    priorityEquals,
-	token.TypeLt:       priorityLessGreater,
-	token.TypeGt:       priorityLessGreater,
-	token.TypePlus:     prioritySum,
-	token.TypeMinus:    prioritySum,
-	token.TypeAsterisk: priorityProduct,
-	token.TypeSlash:    priorityProduct,
+	token.TypeEq:        priorityEquals,
+	token.TypeNotEq:     priorityEquals,
+	token.TypeLt:        priorityLessGreater,
+	token.TypeGt:        priorityLessGreater,
+	token.TypePlus:      prioritySum,
+	token.TypeMinus:     prioritySum,
+	token.TypeAsterisk:  priorityProduct,
+	token.TypeSlash:     priorityProduct,
+	token.TypeLeftParen: priorityCall,
 }
 
 type (
@@ -70,6 +71,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.TypeNotEq, p.parseInfixExpression)
 	p.registerInfix(token.TypeLt, p.parseInfixExpression)
 	p.registerInfix(token.TypeGt, p.parseInfixExpression)
+	p.registerInfix(token.TypeLeftParen, p.parseCallExpression)
 
 	// Set curToken and peekToken
 	p.nextToken()
@@ -350,6 +352,40 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{
+		Token:    p.curToken,
+		Function: function,
+	}
+	exp.Arguments = p.parseCallArguments()
+	return exp
+
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	var args []ast.Expression
+
+	if p.peekToken.Type == token.TypeRightParen {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+	args = append(args, p.parseExpression(priorityLowest))
+
+	for p.peekToken.Type == token.TypeComma {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(priorityLowest))
+	}
+
+	if !p.expectPeek(token.TypeRightParen) {
+		return nil
+	}
+
+	return args
 }
 
 func (p *Parser) expectPeek(typ token.TokenType) bool {

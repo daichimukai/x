@@ -253,6 +253,23 @@ func TestFunctionParameters(t *testing.T) {
 	}
 }
 
+func TestCallExpression(t *testing.T) {
+	input := `add(1, 2 * 3, 4 + 5);`
+	program := parseProgram(t, input)
+	require.Equal(t, 1, len(program.Statements))
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	exp, ok := stmt.Expression.(*ast.CallExpression)
+	require.True(t, ok)
+
+	testLiteralExpression(t, "add", exp.Function)
+	require.Equal(t, 3, len(exp.Arguments))
+	testLiteralExpression(t, 1, exp.Arguments[0])
+	testInfixExpression(t, 2, "*", 3, exp.Arguments[1])
+	testInfixExpression(t, 4, "+", 5, exp.Arguments[2])
+}
+
 func TestParsingPrefixExpression(t *testing.T) {
 	testcases := []struct {
 		input    string
