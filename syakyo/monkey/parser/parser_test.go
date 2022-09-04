@@ -11,22 +11,31 @@ import (
 )
 
 func TestLetStatement(t *testing.T) {
-	testcases := map[string]struct {
+	testcases := []struct {
 		input         string
 		expectedIdent string
+		expectedValue interface{}
 	}{
-		"right hand side is int": {
+		{
 			input:         `let x = 5;`,
 			expectedIdent: "x",
+			expectedValue: 5,
+		},
+		{
+			input:         `let y = true;`,
+			expectedIdent: "y",
+			expectedValue: true,
+		},
+		{
+			input:         `let foobar = y;`,
+			expectedIdent: "foobar",
+			expectedValue: "y",
 		},
 	}
 
-	for name, tt := range testcases {
-		t.Run(name, func(t *testing.T) {
-			l := lexer.New(tt.input)
-			p := parser.New(l)
-			program, err := p.ParseProgram()
-			require.NoError(t, err)
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			program := parseProgram(t, tt.input)
 			require.Equal(t, 1, len(program.Statements))
 
 			s := program.Statements[0]
@@ -34,28 +43,43 @@ func TestLetStatement(t *testing.T) {
 			letStmt, ok := s.(*ast.LetStatement)
 			require.True(t, ok)
 
-			require.Equal(t, tt.expectedIdent, letStmt.Name.Value)
-			require.Equal(t, tt.expectedIdent, letStmt.Name.TokenLiteral())
+			testLiteralExpression(t, tt.expectedIdent, letStmt.Name)
+			testLiteralExpression(t, tt.expectedValue, letStmt.Value)
 		})
 	}
 }
 
 func TestReturnStatement(t *testing.T) {
-	input := `
-return 5;
-`
+	testcases := []struct {
+		input  string
+		expect interface{}
+	}{
+		{
+			input:  `return 5;`,
+			expect: 5,
+		},
+		{
+			input:  `return true;`,
+			expect: true,
+		},
+		{
+			input:  `return x;`,
+			expect: "x",
+		},
+	}
 
-	l := lexer.New(input)
-	p := parser.New(l)
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			program := parseProgram(t, tt.input)
+			require.Equal(t, 1, len(program.Statements))
+			s := program.Statements[0]
+			require.Equal(t, "return", s.TokenLiteral())
 
-	program, err := p.ParseProgram()
-	require.NoError(t, err)
-	require.Equal(t, 1, len(program.Statements))
-
-	s := program.Statements[0]
-	require.Equal(t, "return", s.TokenLiteral())
-	_, ok := s.(*ast.ReturnStatement)
-	require.True(t, ok)
+			retStmt, ok := s.(*ast.ReturnStatement)
+			require.True(t, ok)
+			testLiteralExpression(t, tt.expect, retStmt.ReturnValue)
+		})
+	}
 }
 
 func TestIdentifier(t *testing.T) {
@@ -318,6 +342,8 @@ func TestParsingPrefixExpression(t *testing.T) {
 }
 
 func testIntegerLiteral(t *testing.T, expect int64, il ast.Expression) {
+	t.Helper()
+
 	integ, ok := il.(*ast.IntegerLiteral)
 	require.True(t, ok)
 	require.Equal(t, expect, integ.Value)

@@ -143,10 +143,11 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 	if ok := p.expectPeek(token.TypeAssign); !ok {
 		return nil, fmt.Errorf("expected =, got %s", p.peekToken.Literal)
 	}
+	p.nextToken()
 
-	// TODO: for now, skip while got semicolon
-	for p.curToken.Type != token.TypeSemicolon {
-		p.nextToken()
+	stmt.Value = p.parseExpression(priorityLowest)
+	if !p.expectPeek(token.TypeSemicolon) {
+		return nil, fmt.Errorf("expected ;, got %s", p.peekToken.Literal)
 	}
 
 	return stmt, nil
@@ -154,12 +155,11 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 
 func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
-
 	p.nextToken()
 
-	// TODO: for now, skip until semicolon
-	for p.curToken.Type != token.TypeSemicolon {
-		p.nextToken()
+	stmt.ReturnValue = p.parseExpression(priorityLowest)
+	if !p.expectPeek(token.TypeSemicolon) {
+		return nil, fmt.Errorf("expected ;, got %s", p.peekToken.Literal)
 	}
 
 	return stmt, nil
