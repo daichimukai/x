@@ -10,6 +10,77 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestEvalBooleanExpression(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect bool
+	}{
+		{
+			input:  `true`,
+			expect: true,
+		},
+		{
+			input:  `false`,
+			expect: false,
+		},
+		{
+			input:  `0 == 0`,
+			expect: true,
+		},
+		{
+			input:  `0 == 1`,
+			expect: false,
+		},
+		{
+			input:  `1 == 0`,
+			expect: false,
+		},
+		{
+			input:  `0 != 0`,
+			expect: false,
+		},
+		{
+			input:  `0 != 1`,
+			expect: true,
+		},
+		{
+			input:  `1 != 0`,
+			expect: true,
+		},
+		{
+			input:  `0 > 0`,
+			expect: false,
+		},
+		{
+			input:  `0 > 1`,
+			expect: false,
+		},
+		{
+			input:  `1 > 0`,
+			expect: true,
+		},
+		{
+			input:  `0 < 0`,
+			expect: false,
+		},
+		{
+			input:  `0 < 1`,
+			expect: true,
+		},
+		{
+			input:  `1 < 0`,
+			expect: false,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+			testBooleanObject(t, tt.expect, evaluated)
+		})
+	}
+}
+
 func TestEvalIntegerExpression(t *testing.T) {
 	testcases := []struct {
 		input  string
@@ -22,6 +93,42 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{
 			input:  `10;`,
 			expect: 10,
+		},
+		{
+			input:  `-5;`,
+			expect: -5,
+		},
+		{
+			input:  `-10;`,
+			expect: -10,
+		},
+		{
+			input:  `1 + 2;`,
+			expect: 3,
+		},
+		{
+			input:  `1 - 2;`,
+			expect: -1,
+		},
+		{
+			input:  `1 * 2;`,
+			expect: 2,
+		},
+		{
+			input:  `1 / 2;`,
+			expect: 0,
+		},
+		{
+			input:  `5 + 5 + 5 + 5 - 10;`,
+			expect: 10,
+		},
+		{
+			input:  `-50 + 100 + -50;`,
+			expect: 0,
+		},
+		{
+			input:  `2 * (5 + 10);`,
+			expect: 30,
 		},
 	}
 
