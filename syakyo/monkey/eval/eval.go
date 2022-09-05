@@ -23,6 +23,10 @@ func Eval(node ast.Node) object.Object {
 		left := Eval(node.Left)
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
+	case *ast.BlockStatement:
+		return evalStatements(node.Statements)
+	case *ast.IfExpression:
+		return evalIfExpression(node)
 	default:
 		return nil
 	}
@@ -50,10 +54,11 @@ func evalPrefixExpression(op string, right object.Object) object.Object {
 }
 
 func evalBangOperatorExpression(right object.Object) object.Object {
-	if right == object.False || right == object.Null {
+	if isTruthy(right) {
+		return object.False
+	} else {
 		return object.True
 	}
-	return object.False
 }
 
 func evalMinusOperatorExpression(right object.Object) object.Object {
@@ -99,4 +104,20 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 		return object.Null
 	}
 	return &object.Integer{Value: value}
+}
+
+func evalIfExpression(ie *ast.IfExpression) object.Object {
+	condition := Eval(ie.Condition)
+
+	if isTruthy(condition) {
+		return Eval(ie.Consequence)
+	} else if ie.Alternative != nil {
+		return Eval(ie.Alternative)
+	} else {
+		return object.Null
+	}
+}
+
+func isTruthy(obj object.Object) bool {
+	return !(obj == object.False || obj == object.Null)
 }

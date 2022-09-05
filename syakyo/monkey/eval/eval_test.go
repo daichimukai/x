@@ -179,6 +179,50 @@ func TestEvalBangOperator(t *testing.T) {
 	}
 }
 
+func TestIfExpression(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect interface{}
+	}{
+		{
+			input:  `if (true) { 10 }`,
+			expect: 10,
+		},
+		{
+			input:  `if (false) { 10 }`,
+			expect: nil,
+		},
+		{
+			input:  `if (true) { 10 } else { 20 }`,
+			expect: 10,
+		},
+		{
+			input:  `if (false) { 10 } else { 20 }`,
+			expect: 20,
+		},
+		{
+			input:  `if (1) { 10 }`,
+			expect: 10,
+		},
+		{
+			input:  `if (0) { 10 }`, // ¯\_(ツ)_/¯
+			expect: 10,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+			integer, ok := tt.expect.(int)
+			if ok {
+				testIntegerObject(t, int64(integer), evaluated)
+			} else {
+				testNullObject(t, evaluated)
+			}
+		})
+	}
+}
+
 func testEval(t *testing.T, input string) object.Object {
 	t.Helper()
 	l := lexer.New(input)
@@ -198,4 +242,9 @@ func testIntegerObject(t *testing.T, expect int64, obj object.Object) {
 func testBooleanObject(t *testing.T, expect bool, obj object.Object) {
 	t.Helper()
 	require.Equal(t, object.BooleanFromNative(expect), obj)
+}
+
+func testNullObject(t *testing.T, obj object.Object) {
+	t.Helper()
+	require.Equal(t, object.Null, obj)
 }
