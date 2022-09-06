@@ -3,14 +3,15 @@ package object
 
 import "fmt"
 
+//go:generate stringer -type ObjectType -linecomment
 type ObjectType int
 
 const (
-	_ ObjectType = iota
-	IntegerObjectType
-	BooleanObjectType
-	NullObjectType
-	ReturnValueObjectType
+	IntegerObjectType     ObjectType = iota // INTEGER
+	BooleanObjectType                       // BOOLEAN
+	NullObjectType                          // NULL
+	ReturnValueObjectType                   // RETURN_VALUE
+	ErrorObjectType                         // ERROR
 )
 
 type Object interface {
@@ -59,3 +60,17 @@ type ReturnValue struct {
 
 func (rv *ReturnValue) Type() ObjectType { return ReturnValueObjectType }
 func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
+
+// Error is an object that means some error happend.
+type Error struct {
+	Message string
+}
+
+func (e *Error) Type() ObjectType { return ErrorObjectType }
+func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
+
+func NewError(format string, a ...interface{}) *Error {
+	return &Error{
+		Message: fmt.Sprintf(format, a...),
+	}
+}

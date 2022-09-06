@@ -260,6 +260,48 @@ func TestReturnStatements(t *testing.T) {
 	}
 }
 
+func TestErrorHandling(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect string
+	}{
+		{
+			input:  `5 + true`,
+			expect: "type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			input:  `5 + true; 5;`,
+			expect: "type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			input:  `-true`,
+			expect: "unknown operator: -BOOLEAN",
+		},
+		{
+			input:  `true + false`,
+			expect: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			input:  `5; true + false; 5;`,
+			expect: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			input:  `if (10 > 1) { true + false; }`,
+			expect: "unknown operator: BOOLEAN + BOOLEAN",
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+
+			errObj, ok := evaluated.(*object.Error)
+			require.True(t, ok)
+			require.Equal(t, tt.expect, errObj.Message)
+		})
+	}
+}
+
 func testEval(t *testing.T, input string) object.Object {
 	t.Helper()
 	l := lexer.New(input)
