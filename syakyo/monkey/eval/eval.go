@@ -6,52 +6,81 @@ import (
 	"github.com/daichimukai/x/syakyo/monkey/object"
 )
 
-func Eval(node ast.Node) object.Object {
+type Environment struct {
+	store map[string]object.Object
+}
+
+func NewEnvironment() *Environment {
+	return &Environment{
+		store: make(map[string]object.Object),
+	}
+}
+
+func (e *Environment) Get(name string) (object.Object, bool) {
+	val, ok := e.store[name]
+	return val, ok
+}
+
+func (e *Environment) Set(name string, val object.Object) object.Object {
+	e.store[name] = val
+	return val
+}
+
+func (e *Environment) Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalProgram(node)
+		return e.evalProgram(node)
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return e.Eval(node.Expression)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return object.BooleanFromNative(node.Value)
 	case *ast.PrefixExpression:
-		right := Eval(node.Right)
+		right := e.Eval(node.Right)
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpression(node.Operator, right)
+		return e.evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
-		left := Eval(node.Left)
+		left := e.Eval(node.Left)
 		if isError(left) {
 			return left
 		}
-		right := Eval(node.Right)
+		right := e.Eval(node.Right)
 		if isError(right) {
 			return right
 		}
-		return evalInfixExpression(node.Operator, left, right)
+		return e.evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
-		return evalBlockStatement(node.Statements)
+		return e.evalBlockStatement(node.Statements)
 	case *ast.IfExpression:
-		return evalIfExpression(node)
+		return e.evalIfExpression(node)
 	case *ast.ReturnStatement:
-		val := Eval(node.ReturnValue)
+		val := e.Eval(node.ReturnValue)
 		if isError(val) {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
+	case *ast.LetStatement:
+		val := e.Eval(node.Value)
+		if isError(val) {
+			return val
+		}
+		e.Set(node.Name.Value, val)
+		return nil
+	case *ast.Identifier:
+		return e.evalIdentifier(node)
 	default:
 		return nil
 	}
 }
 
-func evalProgram(program *ast.Program) object.Object {
+func (e *Environment) evalProgram(program *ast.Program) object.Object {
 	var result object.Object
 
 	for _, statement := range program.Statements {
-		result = Eval(statement)
+		result = e.Eval(statement)
 
 		switch result := result.(type) {
 		case *object.ReturnValue:
@@ -64,11 +93,11 @@ func evalProgram(program *ast.Program) object.Object {
 	return result
 }
 
-func evalBlockStatement(stmts []ast.Statement) object.Object {
+func (e *Environment) evalBlockStatement(stmts []ast.Statement) object.Object {
 	var result object.Object
 
 	for _, statement := range stmts {
-		result = Eval(statement)
+		result = e.Eval(statement)
 		if result == nil {
 			continue
 		}
@@ -82,18 +111,18 @@ func evalBlockStatement(stmts []ast.Statement) object.Object {
 	return result
 }
 
-func evalPrefixExpression(op string, right object.Object) object.Object {
+func (e *Environment) evalPrefixExpression(op string, right object.Object) object.Object {
 	switch op {
 	case "!":
-		return evalBangOperatorExpression(right)
+		return e.evalBangOperatorExpression(right)
 	case "-":
-		return evalMinusOperatorExpression(right)
+		return e.evalMinusOperatorExpression(right)
 	default:
 		return object.NewError("unknown operator: %s%s", op, right.Type().String())
 	}
 }
 
-func evalBangOperatorExpression(right object.Object) object.Object {
+func (e *Environment) evalBangOperatorExpression(right object.Object) object.Object {
 	if isTruthy(right) {
 		return object.False
 	} else {
@@ -101,7 +130,7 @@ func evalBangOperatorExpression(right object.Object) object.Object {
 	}
 }
 
-func evalMinusOperatorExpression(right object.Object) object.Object {
+func (e *Environment) evalMinusOperatorExpression(right object.Object) object.Object {
 	if right.Type() != object.IntegerObjectType {
 		return object.NewError("unknown operator: -%s", right.Type().String())
 	}
@@ -110,10 +139,10 @@ func evalMinusOperatorExpression(right object.Object) object.Object {
 	return &object.Integer{Value: -value}
 }
 
-func evalInfixExpression(op string, left, right object.Object) object.Object {
+func (e *Environment) evalInfixExpression(op string, left, right object.Object) object.Object {
 	switch {
 	case left.Type() == object.IntegerObjectType && right.Type() == object.IntegerObjectType:
-		return evalIntegerInfixExpression(op, left, right)
+		return e.evalIntegerInfixExpression(op, left, right)
 	case left.Type() != right.Type():
 		return object.NewError(
 			"type mismatch: %s %s %s",
@@ -127,7 +156,7 @@ func evalInfixExpression(op string, left, right object.Object) object.Object {
 	}
 }
 
-func evalIntegerInfixExpression(op string, left, right object.Object) object.Object {
+func (e *Environment) evalIntegerInfixExpression(op string, left, right object.Object) object.Object {
 	lvalue := left.(*object.Integer).Value
 	rvalue := right.(*object.Integer).Value
 	var value int64
@@ -157,19 +186,27 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 	return &object.Integer{Value: value}
 }
 
-func evalIfExpression(ie *ast.IfExpression) object.Object {
-	condition := Eval(ie.Condition)
+func (e *Environment) evalIfExpression(ie *ast.IfExpression) object.Object {
+	condition := e.Eval(ie.Condition)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(ie.Consequence)
+		return e.Eval(ie.Consequence)
 	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative)
+		return e.Eval(ie.Alternative)
 	} else {
 		return object.Null
 	}
+}
+
+func (e *Environment) evalIdentifier(node *ast.Identifier) object.Object {
+	val, ok := e.Get(node.Value)
+	if !ok {
+		return object.NewError("identifier not found: %s", node.Value)
+	}
+	return val
 }
 
 func isTruthy(obj object.Object) bool {

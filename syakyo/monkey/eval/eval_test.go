@@ -260,6 +260,40 @@ func TestReturnStatements(t *testing.T) {
 	}
 }
 
+func TestLetStatements(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect int64
+	}{
+		{
+			input:  `let a = 5; a;`,
+			expect: 5,
+		},
+		{
+			input:  `let a = 5 * 5; a;`,
+			expect: 25,
+		},
+		{
+			input:  `let a = 5; let b = a; b;`,
+			expect: 5,
+		},
+		{
+			input: `
+			let a = 5;
+			let b = a;
+			let c = a + b + 5;
+			c;`,
+			expect: 15,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			testIntegerObject(t, tt.expect, testEval(t, tt.input))
+		})
+	}
+}
+
 func TestErrorHandling(t *testing.T) {
 	testcases := []struct {
 		input  string
@@ -289,6 +323,10 @@ func TestErrorHandling(t *testing.T) {
 			input:  `if (10 > 1) { true + false; }`,
 			expect: "unknown operator: BOOLEAN + BOOLEAN",
 		},
+		{
+			input:  `foobar`,
+			expect: "identifier not found: foobar",
+		},
 	}
 
 	for _, tt := range testcases {
@@ -306,9 +344,10 @@ func testEval(t *testing.T, input string) object.Object {
 	t.Helper()
 	l := lexer.New(input)
 	p := parser.New(l)
+	env := eval.NewEnvironment()
 	program, err := p.ParseProgram()
 	require.NoError(t, err)
-	return eval.Eval(program)
+	return env.Eval(program)
 }
 
 func testIntegerObject(t *testing.T, expect int64, obj object.Object) {
