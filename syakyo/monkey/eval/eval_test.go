@@ -223,6 +223,43 @@ func TestIfExpression(t *testing.T) {
 	}
 }
 
+func TestReturnStatements(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect int64
+	}{
+		{
+			input:  `return 10;`,
+			expect: 10,
+		},
+		{
+			input:  `return 10; 9;`,
+			expect: 10,
+		},
+		{
+			input:  `9; return 2 * 5; 10;`,
+			expect: 10,
+		},
+		{
+			input: `
+			if (10 > 1) {
+				if (10 > 1) {
+					return 10;
+				}
+				return 1;
+			}`,
+			expect: 10,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+			testIntegerObject(t, tt.expect, evaluated)
+		})
+	}
+}
+
 func testEval(t *testing.T, input string) object.Object {
 	t.Helper()
 	l := lexer.New(input)

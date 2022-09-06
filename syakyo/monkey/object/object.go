@@ -10,6 +10,7 @@ const (
 	IntegerObjectType
 	BooleanObjectType
 	NullObjectType
+	ReturnValueObjectType
 )
 
 type Object interface {
@@ -50,3 +51,11 @@ type null struct{}
 
 func (n *null) Type() ObjectType { return NullObjectType }
 func (n *null) Inspect() string  { return "null" }
+
+// ReturnValue wraps an object that is returned from a block.
+type ReturnValue struct {
+	Value Object
+}
+
+func (rv *ReturnValue) Type() ObjectType { return ReturnValueObjectType }
+func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }

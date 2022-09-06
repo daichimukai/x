@@ -9,7 +9,7 @@ import (
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalProgram(node)
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
 	case *ast.IntegerLiteral:
@@ -24,19 +24,39 @@ func Eval(node ast.Node) object.Object {
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
-		return evalStatements(node.Statements)
+		return evalBlockStatement(node.Statements)
 	case *ast.IfExpression:
 		return evalIfExpression(node)
+	case *ast.ReturnStatement:
+		val := Eval(node.ReturnValue)
+		return &object.ReturnValue{Value: val}
 	default:
 		return nil
 	}
 }
 
-func evalStatements(stmts []ast.Statement) object.Object {
+func evalProgram(program *ast.Program) object.Object {
+	var result object.Object
+
+	for _, statement := range program.Statements {
+		result = Eval(statement)
+
+		if resultValue, ok := result.(*object.ReturnValue); ok {
+			return resultValue.Value
+		}
+	}
+
+	return result
+}
+
+func evalBlockStatement(stmts []ast.Statement) object.Object {
 	var result object.Object
 
 	for _, statement := range stmts {
 		result = Eval(statement)
+		if result != nil && result.Type() == object.ReturnValueObjectType {
+			break
+		}
 	}
 
 	return result
