@@ -13,11 +13,12 @@ func _() {
 	_ = x[NullObjectType-2]
 	_ = x[ReturnValueObjectType-3]
 	_ = x[ErrorObjectType-4]
+	_ = x[FunctionObjectType-5]
 }
 
-const _ObjectType_name = "INTEGERBOOLEANNULLRETURN_VALUEERROR"
+const _ObjectType_name = "INTEGERBOOLEANNULLRETURN_VALUEERRORFUNCTION"
 
-var _ObjectType_index = [...]uint8{0, 7, 14, 18, 30, 35}
+var _ObjectType_index = [...]uint8{0, 7, 14, 18, 30, 35, 43}
 
 func (i ObjectType) String() string {
 	if i < 0 || i >= ObjectType(len(_ObjectType_index)-1) {

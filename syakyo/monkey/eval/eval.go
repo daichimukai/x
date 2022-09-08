@@ -8,6 +8,7 @@ import (
 
 type Environment struct {
 	store map[string]object.Object
+	outer *Environment
 }
 
 func NewEnvironment() *Environment {
@@ -16,8 +17,17 @@ func NewEnvironment() *Environment {
 	}
 }
 
+func (e *Environment) NewEnclosedEnvironment() object.Environment {
+	env := NewEnvironment()
+	env.outer = e
+	return env
+}
+
 func (e *Environment) Get(name string) (object.Object, bool) {
 	val, ok := e.store[name]
+	if !ok && e.outer != nil {
+		return e.outer.Get(name)
+	}
 	return val, ok
 }
 
@@ -71,6 +81,22 @@ func (e *Environment) Eval(node ast.Node) object.Object {
 		return nil
 	case *ast.Identifier:
 		return e.evalIdentifier(node)
+	case *ast.FunctionLiteral:
+		return &object.Function{
+			Parameters: node.Parameters,
+			Body:       node.Body,
+			Env:        e,
+		}
+	case *ast.CallExpression:
+		function := e.Eval(node.Function)
+		if isError(function) {
+			return function
+		}
+		args := e.evalExpressions(node.Arguments)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+		return object.ApplyFunction(function, args)
 	default:
 		return nil
 	}
@@ -207,6 +233,19 @@ func (e *Environment) evalIdentifier(node *ast.Identifier) object.Object {
 		return object.NewError("identifier not found: %s", node.Value)
 	}
 	return val
+}
+
+func (e *Environment) evalExpressions(exprs []ast.Expression) []object.Object {
+	var result []object.Object
+
+	for _, expr := range exprs {
+		evaluated := e.Eval(expr)
+		if isError(evaluated) {
+			return []object.Object{evaluated}
+		}
+		result = append(result, evaluated)
+	}
+	return result
 }
 
 func isTruthy(obj object.Object) bool {

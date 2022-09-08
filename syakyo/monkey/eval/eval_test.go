@@ -294,6 +294,67 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestFunctionObject(t *testing.T) {
+	input := `fn(x) { x + 2; };`
+
+	evaluated := testEval(t, input)
+	fn, ok := evaluated.(*object.Function)
+	require.True(t, ok)
+
+	require.Equal(t, 1, len(fn.Parameters))
+	require.Equal(t, "x", fn.Parameters[0].Value)
+	require.Equal(t, "(x + 2)", fn.Body.String())
+}
+
+func TestFunctionApplication(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect int64
+	}{
+		{
+			input:  `let id = fn(x) { x; }; id(5);`,
+			expect: 5,
+		},
+		{
+			input:  `let id = fn(x) { return x; }; id(5);`,
+			expect: 5,
+		},
+		{
+			input:  `let double = fn(x) { x * 2; }; double(5);`,
+			expect: 10,
+		},
+		{
+			input:  `let add = fn(x, y) { x + y; }; add(5, 5);`,
+			expect: 10,
+		},
+		{
+			input: `
+			let add = fn(x, y) { x + y; };
+			add(5 + 5, add(5, 5));`,
+			expect: 20,
+		},
+		{
+			input:  `fn(x) { x; }(5);`,
+			expect: 5,
+		},
+		// TODO: this test does not pass
+		{
+			input: `
+			let newAdder = fn(x) { fn(y) { x + y; } };
+			let addTwo = newAdder(2);
+			addTwo(2);`,
+			expect: 4,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			testIntegerObject(t, tt.expect, testEval(t, tt.input))
+		})
+	}
+
+}
+
 func TestErrorHandling(t *testing.T) {
 	testcases := []struct {
 		input  string

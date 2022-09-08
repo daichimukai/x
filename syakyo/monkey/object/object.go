@@ -1,7 +1,13 @@
 // Package object implements the object system of the monkey language.
 package object
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+
+	"github.com/daichimukai/x/syakyo/monkey/ast"
+)
 
 //go:generate stringer -type ObjectType -linecomment
 type ObjectType int
@@ -12,6 +18,7 @@ const (
 	NullObjectType                          // NULL
 	ReturnValueObjectType                   // RETURN_VALUE
 	ErrorObjectType                         // ERROR
+	FunctionObjectType                      // FUNCTION
 )
 
 type Object interface {
@@ -73,4 +80,52 @@ func NewError(format string, a ...interface{}) *Error {
 	return &Error{
 		Message: fmt.Sprintf(format, a...),
 	}
+}
+
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        Environment
+}
+
+type Environment interface {
+	NewEnclosedEnvironment() Environment
+	Eval(ast.Node) Object
+	Set(string, Object) Object
+}
+
+func (f *Function) Type() ObjectType { return FunctionObjectType }
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+
+	var params []string
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ","))
+	out.WriteString("{\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("\n}")
+
+	return out.String()
+}
+
+func ApplyFunction(fn Object, args []Object) Object {
+	function, ok := fn.(*Function)
+	if !ok {
+		return NewError("not a function: %s", fn.Type().String())
+	}
+
+	extendedEnv := function.Env.NewEnclosedEnvironment()
+	for i, param := range function.Parameters {
+		extendedEnv.Set(param.Value, args[i])
+	}
+
+	evaluated := extendedEnv.Eval(function.Body)
+	if retVal, ok := evaluated.(*ReturnValue); ok {
+		return retVal.Value
+	}
+	return evaluated
 }
