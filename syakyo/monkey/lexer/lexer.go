@@ -81,6 +81,9 @@ func (l *Lexer) NextToken() token.Token {
 		literal = string(l.ch)
 		typ = v
 		l.readChar()
+	} else if l.ch == '"' {
+		literal = l.readString()
+		typ = token.TypeString
 	} else if isLetter(l.ch) {
 		literal = l.readIdentifier()
 		typ = token.LookupIdent(literal)
@@ -101,6 +104,18 @@ func (l *Lexer) readIdentifier() string {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+	l.readChar()
+	return l.input[position : l.position-1]
 }
 
 func isLetter(ch byte) bool {

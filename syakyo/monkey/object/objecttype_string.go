@@ -9,16 +9,17 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[IntegerObjectType-0]
-	_ = x[BooleanObjectType-1]
-	_ = x[NullObjectType-2]
-	_ = x[ReturnValueObjectType-3]
-	_ = x[ErrorObjectType-4]
-	_ = x[FunctionObjectType-5]
+	_ = x[StringObjectType-1]
+	_ = x[BooleanObjectType-2]
+	_ = x[NullObjectType-3]
+	_ = x[ReturnValueObjectType-4]
+	_ = x[ErrorObjectType-5]
+	_ = x[FunctionObjectType-6]
 }
 
-const _ObjectType_name = "INTEGERBOOLEANNULLRETURN_VALUEERRORFUNCTION"
+const _ObjectType_name = "INTEGERSTRINGBOOLEANNULLRETURN_VALUEERRORFUNCTION"
 
-var _ObjectType_index = [...]uint8{0, 7, 14, 18, 30, 35, 43}
+var _ObjectType_index = [...]uint8{0, 7, 13, 20, 24, 36, 41, 49}
 
 func (i ObjectType) String() string {
 	if i < 0 || i >= ObjectType(len(_ObjectType_index)-1) {

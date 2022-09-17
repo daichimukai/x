@@ -44,6 +44,8 @@ func (e *Environment) Eval(node ast.Node) object.Object {
 		return e.Eval(node.Expression)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	case *ast.Boolean:
 		return object.BooleanFromNative(node.Value)
 	case *ast.PrefixExpression:

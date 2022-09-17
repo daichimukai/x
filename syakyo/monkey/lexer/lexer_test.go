@@ -17,6 +17,7 @@ func TestNextToken_SingleToken(t *testing.T) {
 		"eof":          {"", token.TypeEof, ""},
 		"ident":        {"foo", token.TypeIdent, "foo"},
 		"int":          {"0", token.TypeInt, "0"},
+		"string":       {`"foo"`, token.TypeString, `foo`},
 		"assign":       {"=", token.TypeAssign, "="},
 		"plus":         {"+", token.TypePlus, "+"},
 		"minus":        {"-", token.TypeMinus, "-"},
@@ -82,6 +83,7 @@ let add = fn(x, y) {
 };
 
 let result = add(five, ten);
+let str = "foo";
 `
 
 	expectedTokens := []struct {
@@ -123,6 +125,11 @@ let result = add(five, ten);
 		{token.TypeComma, ","},
 		{token.TypeIdent, "ten"},
 		{token.TypeRightParen, ")"},
+		{token.TypeSemicolon, ";"},
+		{token.TypeLet, "let"},
+		{token.TypeIdent, "str"},
+		{token.TypeAssign, "="},
+		{token.TypeString, "foo"},
 		{token.TypeSemicolon, ";"},
 		{token.TypeEof, ""},
 	}

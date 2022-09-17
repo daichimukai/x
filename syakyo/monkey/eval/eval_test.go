@@ -140,6 +140,15 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestEvalStringLiteral(t *testing.T) {
+	input := `"Hello world!"`
+
+	evaluated := testEval(t, input)
+	str, ok := evaluated.(*object.String)
+	require.True(t, ok)
+	require.Equal(t, "Hello world!", str.Value)
+}
+
 func TestEvalBangOperator(t *testing.T) {
 	testcases := []struct {
 		input  string

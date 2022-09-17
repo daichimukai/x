@@ -8,10 +8,9 @@ const (
 	// TypeEof appears if the input reached to the end.
 	TypeEof
 
-	// TypeIdent represents the identifier literal, e.g. x, foo.
-	TypeIdent
-	// TypeInt represents the integer literal, e.g. 0, 100, -1.
-	TypeInt
+	TypeIdent  // identifier literal, e.g. x, foo.
+	TypeInt    // integer literal e.g. 0, 100, -1.
+	TypeString // string literal, e.g. "foo".
 
 	// TypePlus represents the operator "="
 	TypeAssign

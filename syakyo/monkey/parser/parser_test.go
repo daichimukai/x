@@ -145,6 +145,21 @@ func TestIntegralLiteralExpression(t *testing.T) {
 	testLiteralExpression(t, 5, stmt.Expression)
 }
 
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello world"`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+	program, err := p.ParseProgram()
+	require.NoError(t, err)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	require.True(t, ok)
+
+	require.Equal(t, "hello world", literal.Value)
+}
+
 func testBoolean(t *testing.T, expected bool, exp ast.Expression) {
 	t.Helper()
 

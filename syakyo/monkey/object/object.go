@@ -14,6 +14,7 @@ type ObjectType int
 
 const (
 	IntegerObjectType     ObjectType = iota // INTEGER
+	StringObjectType                        // STRING
 	BooleanObjectType                       // BOOLEAN
 	NullObjectType                          // NULL
 	ReturnValueObjectType                   // RETURN_VALUE
@@ -32,6 +33,13 @@ type Integer struct {
 
 func (i *Integer) Type() ObjectType { return IntegerObjectType }
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
+
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType { return StringObjectType }
+func (s *String) Inspect() string  { return s.Value }
 
 var (
 	True  = &boolean{Value: true}
