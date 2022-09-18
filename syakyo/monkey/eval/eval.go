@@ -171,6 +171,8 @@ func (e *Environment) evalInfixExpression(op string, left, right object.Object) 
 	switch {
 	case left.Type() == object.IntegerObjectType && right.Type() == object.IntegerObjectType:
 		return e.evalIntegerInfixExpression(op, left, right)
+	case left.Type() == object.StringObjectType && right.Type() == object.StringObjectType:
+		return e.evalStringInfixExpression(op, left, right)
 	case left.Type() != right.Type():
 		return object.NewError(
 			"type mismatch: %s %s %s",
@@ -212,6 +214,18 @@ func (e *Environment) evalIntegerInfixExpression(op string, left, right object.O
 		)
 	}
 	return &object.Integer{Value: value}
+}
+
+func (e *Environment) evalStringInfixExpression(op string, left, right object.Object) object.Object {
+	if op != "+" {
+		return object.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+	}
+
+	leftVal := left.(*object.String).Value
+	rightVal := right.(*object.String).Value
+	return &object.String{
+		Value: leftVal + rightVal,
+	}
 }
 
 func (e *Environment) evalIfExpression(ie *ast.IfExpression) object.Object {

@@ -149,6 +149,15 @@ func TestEvalStringLiteral(t *testing.T) {
 	require.Equal(t, "Hello world!", str.Value)
 }
 
+func TestEvalStringConcatenation(t *testing.T) {
+	input := `"Hello" + " " + "World!"`
+
+	evaluated := testEval(t, input)
+	str, ok := evaluated.(*object.String)
+	require.True(t, ok)
+	require.Equal(t, "Hello World!", str.Value)
+}
+
 func TestEvalBangOperator(t *testing.T) {
 	testcases := []struct {
 		input  string
@@ -346,7 +355,6 @@ func TestFunctionApplication(t *testing.T) {
 			input:  `fn(x) { x; }(5);`,
 			expect: 5,
 		},
-		// TODO: this test does not pass
 		{
 			input: `
 			let newAdder = fn(x) { fn(y) { x + y; } };
@@ -396,6 +404,10 @@ func TestErrorHandling(t *testing.T) {
 		{
 			input:  `foobar`,
 			expect: "identifier not found: foobar",
+		},
+		{
+			input:  `"foo" - "bar"`,
+			expect: "unknown operator: STRING - STRING",
 		},
 	}
 
