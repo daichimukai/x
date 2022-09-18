@@ -20,6 +20,7 @@ const (
 	ReturnValueObjectType                   // RETURN_VALUE
 	ErrorObjectType                         // ERROR
 	FunctionObjectType                      // FUNCTION
+	BuiltinObjectType                       // BUILTIN
 )
 
 type Object interface {
@@ -121,19 +122,30 @@ func (f *Function) Inspect() string {
 }
 
 func ApplyFunction(fn Object, args []Object) Object {
-	function, ok := fn.(*Function)
-	if !ok {
+	switch fn := fn.(type) {
+	case *Function:
+		extendedEnv := fn.Env.NewEnclosedEnvironment()
+		for i, param := range fn.Parameters {
+			extendedEnv.Set(param.Value, args[i])
+		}
+
+		evaluated := extendedEnv.Eval(fn.Body)
+		if retVal, ok := evaluated.(*ReturnValue); ok {
+			return retVal.Value
+		}
+		return evaluated
+	case *Builtin:
+		return fn.Fn(args...)
+	default:
 		return NewError("not a function: %s", fn.Type().String())
 	}
-
-	extendedEnv := function.Env.NewEnclosedEnvironment()
-	for i, param := range function.Parameters {
-		extendedEnv.Set(param.Value, args[i])
-	}
-
-	evaluated := extendedEnv.Eval(function.Body)
-	if retVal, ok := evaluated.(*ReturnValue); ok {
-		return retVal.Value
-	}
-	return evaluated
 }
+
+type BuiltinFunction func(args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltinFunction
+}
+
+func (b *Builtin) Type() ObjectType { return BuiltinObjectType }
+func (b *Builtin) Inspect() string  { return "builtin function" }

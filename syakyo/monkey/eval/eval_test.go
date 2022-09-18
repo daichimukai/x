@@ -372,6 +372,35 @@ func TestFunctionApplication(t *testing.T) {
 
 }
 
+func TestBuiltinFunctions(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect int64
+	}{
+		{
+			input:  `len("")`,
+			expect: 0,
+		},
+		{
+			input:  `len("four")`,
+			expect: 4,
+		},
+		{
+			input:  `len("Hello World!")`,
+			expect: 12,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+			i, ok := evaluated.(*object.Integer)
+			require.True(t, ok)
+			require.Equal(t, tt.expect, i.Value)
+		})
+	}
+}
+
 func TestErrorHandling(t *testing.T) {
 	testcases := []struct {
 		input  string
@@ -408,6 +437,18 @@ func TestErrorHandling(t *testing.T) {
 		{
 			input:  `"foo" - "bar"`,
 			expect: "unknown operator: STRING - STRING",
+		},
+		{
+			input:  `len()`,
+			expect: "wrong number of arguments: got=0, want=1",
+		},
+		{
+			input:  `len(1)`,
+			expect: "argument to `len` not supported: got INTEGER",
+		},
+		{
+			input:  `len("one", "two")`,
+			expect: "wrong number of arguments: got=2, want=1",
 		},
 	}
 
