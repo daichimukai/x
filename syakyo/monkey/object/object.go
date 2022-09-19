@@ -15,6 +15,7 @@ type ObjectType int
 const (
 	IntegerObjectType     ObjectType = iota // INTEGER
 	StringObjectType                        // STRING
+	ArrayObjectType                         // ARRAY
 	BooleanObjectType                       // BOOLEAN
 	NullObjectType                          // NULL
 	ReturnValueObjectType                   // RETURN_VALUE
@@ -41,6 +42,26 @@ type String struct {
 
 func (s *String) Type() ObjectType { return StringObjectType }
 func (s *String) Inspect() string  { return s.Value }
+
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Type() ObjectType { return ArrayObjectType }
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+
+	var elems []string
+	for _, elem := range a.Elements {
+		elems = append(elems, elem.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elems, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
 
 var (
 	True  = &boolean{Value: true}

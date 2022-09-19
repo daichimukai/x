@@ -149,6 +149,79 @@ func TestEvalStringLiteral(t *testing.T) {
 	require.Equal(t, "Hello world!", str.Value)
 }
 
+func TestEvalArrayLiteral(t *testing.T) {
+	input := `[1, 2 * 2, 3 + 3]`
+
+	evaluated := testEval(t, input)
+	arr, ok := evaluated.(*object.Array)
+	require.True(t, ok)
+
+	require.Len(t, arr.Elements, 3)
+	testIntegerObject(t, 1, arr.Elements[0])
+	testIntegerObject(t, 4, arr.Elements[1])
+	testIntegerObject(t, 6, arr.Elements[2])
+}
+
+func TestEvalArrayIndexExpressions(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect any
+	}{
+		{
+			input:  `[1,2,3][0]`,
+			expect: 1,
+		},
+		{
+			input:  `[1,2,3][1]`,
+			expect: 2,
+		},
+		{
+			input:  `[1,2,3][2]`,
+			expect: 3,
+		},
+		{
+			input:  `let i = 0; [1][i]`,
+			expect: 1,
+		},
+		{
+			input:  `[1, 2, 3][1 + 1]`,
+			expect: 3,
+		},
+		{
+			input:  `let myArray = [1, 2, 3]; myArray[2];`,
+			expect: 3,
+		},
+		{
+			input:  `let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];`,
+			expect: 6,
+		},
+		{
+			input:  `let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];`,
+			expect: 2,
+		},
+		{
+			input:  `[1,2,3][3]`,
+			expect: nil,
+		},
+		{
+			input:  `[1,2,3][-1]`,
+			expect: nil,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(t, tt.input)
+			integer, ok := tt.expect.(int)
+			if ok {
+				testIntegerObject(t, int64(integer), evaluated)
+			} else {
+				testNullObject(t, evaluated)
+			}
+		})
+	}
+}
+
 func TestEvalStringConcatenation(t *testing.T) {
 	input := `"Hello" + " " + "World!"`
 

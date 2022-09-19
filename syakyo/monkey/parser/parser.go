@@ -21,15 +21,16 @@ const (
 )
 
 var precedences = map[token.TokenType]int{
-	token.TypeEq:        priorityEquals,
-	token.TypeNotEq:     priorityEquals,
-	token.TypeLt:        priorityLessGreater,
-	token.TypeGt:        priorityLessGreater,
-	token.TypePlus:      prioritySum,
-	token.TypeMinus:     prioritySum,
-	token.TypeAsterisk:  priorityProduct,
-	token.TypeSlash:     priorityProduct,
-	token.TypeLeftParen: priorityCall,
+	token.TypeEq:         priorityEquals,
+	token.TypeNotEq:      priorityEquals,
+	token.TypeLt:         priorityLessGreater,
+	token.TypeGt:         priorityLessGreater,
+	token.TypePlus:       prioritySum,
+	token.TypeMinus:      prioritySum,
+	token.TypeAsterisk:   priorityProduct,
+	token.TypeSlash:      priorityProduct,
+	token.TypeLeftParen:  priorityCall,
+	token.TypeLeftBraket: priorityCall,
 }
 
 type (
@@ -61,6 +62,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.TypeMinus, p.parsePrefixExpression)
 	p.registerPrefix(token.TypeBang, p.parsePrefixExpression)
 	p.registerPrefix(token.TypeLeftParen, p.parseGroupedExpression)
+	p.registerPrefix(token.TypeLeftBraket, p.parseArrayExpression)
 	p.registerPrefix(token.TypeIf, p.parseIfExpression)
 	p.registerPrefix(token.TypeFunction, p.parseFunctionLiteral)
 
@@ -73,6 +75,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.TypeLt, p.parseInfixExpression)
 	p.registerInfix(token.TypeGt, p.parseInfixExpression)
 	p.registerInfix(token.TypeLeftParen, p.parseCallExpression)
+	p.registerInfix(token.TypeLeftBraket, p.parseIndexExpression)
 
 	// Set curToken and peekToken
 	p.nextToken()
@@ -252,6 +255,54 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	}
 
 	return exp
+}
+
+func (p *Parser) parseArrayExpression() ast.Expression {
+	return &ast.ArrayLiteral{
+		Token:    p.curToken,
+		Elements: p.parseExpressionList(token.TypeRightBraket),
+	}
+}
+
+func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
+	var list []ast.Expression
+
+	if p.peekToken.Type == end {
+		p.nextToken()
+		return list
+	}
+
+	p.nextToken()
+	list = append(list, p.parseExpression(priorityLowest))
+
+	for p.peekToken.Type == token.TypeComma {
+		p.nextToken()
+		p.nextToken()
+		list = append(list, p.parseExpression(priorityLowest))
+	}
+
+	if p.peekToken.Type != end {
+		return nil
+	}
+
+	p.nextToken()
+	return list
+}
+
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	expr := &ast.IndexExpression{
+		Token: p.curToken,
+		Left:  left,
+	}
+	p.nextToken()
+	expr.Index = p.parseExpression(priorityLowest)
+
+	if p.peekToken.Type != token.TypeRightBraket {
+		return nil
+	}
+
+	p.nextToken()
+	return expr
 }
 
 func (p *Parser) parseIfExpression() ast.Expression {

@@ -59,6 +59,8 @@ var byteToTokenTypeMap map[byte]token.TokenType = map[byte]token.TokenType{
 	')': token.TypeRightParen,
 	'{': token.TypeLeftBrace,
 	'}': token.TypeRightBrace,
+	'[': token.TypeLeftBraket,
+	']': token.TypeRightBraket,
 	',': token.TypeComma,
 	';': token.TypeSemicolon,
 }

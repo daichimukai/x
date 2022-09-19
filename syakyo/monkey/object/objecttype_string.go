@@ -10,17 +10,18 @@ func _() {
 	var x [1]struct{}
 	_ = x[IntegerObjectType-0]
 	_ = x[StringObjectType-1]
-	_ = x[BooleanObjectType-2]
-	_ = x[NullObjectType-3]
-	_ = x[ReturnValueObjectType-4]
-	_ = x[ErrorObjectType-5]
-	_ = x[FunctionObjectType-6]
-	_ = x[BuiltinObjectType-7]
+	_ = x[ArrayObjectType-2]
+	_ = x[BooleanObjectType-3]
+	_ = x[NullObjectType-4]
+	_ = x[ReturnValueObjectType-5]
+	_ = x[ErrorObjectType-6]
+	_ = x[FunctionObjectType-7]
+	_ = x[BuiltinObjectType-8]
 }
 
-const _ObjectType_name = "INTEGERSTRINGBOOLEANNULLRETURN_VALUEERRORFUNCTIONBUILTIN"
+const _ObjectType_name = "INTEGERSTRINGARRAYBOOLEANNULLRETURN_VALUEERRORFUNCTIONBUILTIN"
 
-var _ObjectType_index = [...]uint8{0, 7, 13, 20, 24, 36, 41, 49, 56}
+var _ObjectType_index = [...]uint8{0, 7, 13, 18, 25, 29, 41, 46, 54, 61}
 
 func (i ObjectType) String() string {
 	if i < 0 || i >= ObjectType(len(_ObjectType_index)-1) {

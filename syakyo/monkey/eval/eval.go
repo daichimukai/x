@@ -46,6 +46,24 @@ func (e *Environment) Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value}
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
+	case *ast.ArrayLiteral:
+		elems := e.evalExpressions(node.Elements)
+		if len(elems) == 1 && isError(elems[0]) {
+			return elems[0]
+		}
+		return &object.Array{
+			Elements: elems,
+		}
+	case *ast.IndexExpression:
+		left := e.Eval(node.Left)
+		if isError(left) {
+			return left
+		}
+		index := e.Eval(node.Index)
+		if isError(index) {
+			return index
+		}
+		return e.evalIndexExpression(left, index)
 	case *ast.Boolean:
 		return object.BooleanFromNative(node.Value)
 	case *ast.PrefixExpression:
@@ -165,6 +183,26 @@ func (e *Environment) evalMinusOperatorExpression(right object.Object) object.Ob
 
 	value := right.(*object.Integer).Value
 	return &object.Integer{Value: -value}
+}
+
+func (e *Environment) evalIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ArrayObjectType && index.Type() == object.IntegerObjectType:
+		return e.evalArrayIndexExpression(left, index)
+	default:
+		return object.NewError("index operator not supported: %s", left.Type().String())
+	}
+}
+
+func (e *Environment) evalArrayIndexExpression(left, index object.Object) object.Object {
+	arrayObject := left.(*object.Array)
+	i := index.(*object.Integer).Value
+	max := int64(len(arrayObject.Elements) - 1)
+	if i < 0 || i > max {
+		return object.Null
+	}
+
+	return arrayObject.Elements[i]
 }
 
 func (e *Environment) evalInfixExpression(op string, left, right object.Object) object.Object {

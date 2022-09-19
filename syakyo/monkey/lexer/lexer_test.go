@@ -34,6 +34,8 @@ func TestNextToken_SingleToken(t *testing.T) {
 		"right paren":  {")", token.TypeRightParen, ")"},
 		"left brace":   {"{", token.TypeLeftBrace, "{"},
 		"right brace":  {"}", token.TypeRightBrace, "}"},
+		"left braket":  {"[", token.TypeLeftBraket, "["},
+		"right braket": {"]", token.TypeRightBraket, "]"},
 		"function":     {"fn", token.TypeFunction, "fn"},
 		"let":          {"let", token.TypeLet, "let"},
 		"true":         {"true", token.TypeTrue, "true"},

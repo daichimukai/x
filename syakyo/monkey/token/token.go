@@ -3,63 +3,40 @@ package token
 type TokenType uint
 
 const (
-	// TypeIllegal means that the token is illegal.
-	TypeIllegal TokenType = iota
-	// TypeEof appears if the input reached to the end.
-	TypeEof
+	TypeIllegal TokenType = iota // token is illegal.
+	TypeEof                      // the input reached to the end.
 
 	TypeIdent  // identifier literal, e.g. x, foo.
 	TypeInt    // integer literal e.g. 0, 100, -1.
 	TypeString // string literal, e.g. "foo".
 
-	// TypePlus represents the operator "="
-	TypeAssign
-	// TypePlus represents the operator "+"
-	TypePlus
-	// TypeMinus represents the operator "-"
-	TypeMinus
-	// TypeBang represents the operator "!"
-	TypeBang
-	// TypeAsterisk represents the operator "*"
-	TypeAsterisk
-	// TypeSlash represents the operator "/"
-	TypeSlash
-	// TypeLt represents the operator "<"
-	TypeLt
-	// TypeGt represents the operator ">"
-	TypeGt
-	// TypeEq represents the operator "=="
-	TypeEq
-	// TypeNotEq represents the operator "!="
-	TypeNotEq
+	TypeAssign   // =
+	TypePlus     // +
+	TypeMinus    // -
+	TypeBang     // !
+	TypeAsterisk // *
+	TypeSlash    // /
+	TypeLt       // <
+	TypeGt       // >
+	TypeEq       // ==
+	TypeNotEq    // !=
 
-	// TypeComma represents the delimiter ","
-	TypeComma
-	// TypeSemicolon represents the delimiter ";"
-	TypeSemicolon
-	// TypeLeftParen represents the token `(`
-	TypeLeftParen
-	// TypeRightParen represents the token `)`
-	TypeRightParen
-	// TypeLeftBrace represents the token `{`
-	TypeLeftBrace
-	// TypeRightBrace represents the token `}`
-	TypeRightBrace
+	TypeComma       // ,
+	TypeSemicolon   // ;
+	TypeLeftParen   // (
+	TypeRightParen  // )
+	TypeLeftBrace   // {
+	TypeRightBrace  // }
+	TypeLeftBraket  // [
+	TypeRightBraket // ]
 
-	// TypeFuncion represents the keyword "function"
-	TypeFunction
-	// TypeLeft represents the keyword "let"
-	TypeLet
-	// TypeTrue represents the keyword "true"
-	TypeTrue
-	// TypeFalse represents the keyword "false"
-	TypeFalse
-	// TypeIf represents the keyword "if"
-	TypeIf
-	// TypeElse represents the keyword "else"
-	TypeElse
-	// TypeReturn represents the keyword "return"
-	TypeReturn
+	TypeFunction // keyword "funcion"
+	TypeLet      // keyword "let"
+	TypeTrue     // keyword "true"
+	TypeFalse    // keyword "false"
+	TypeIf       // keyword "if"
+	TypeElse     // keyword "else"
+	TypeReturn   // keywork "return"
 )
 
 // Token represents a token of the language.

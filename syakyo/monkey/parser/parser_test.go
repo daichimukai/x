@@ -153,11 +153,51 @@ func TestStringLiteralExpression(t *testing.T) {
 	program, err := p.ParseProgram()
 	require.NoError(t, err)
 
+	require.Equal(t, 1, len(program.Statements))
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
 	literal, ok := stmt.Expression.(*ast.StringLiteral)
 	require.True(t, ok)
 
 	require.Equal(t, "hello world", literal.Value)
+}
+
+func TestArrayLiteralExpression(t *testing.T) {
+	input := `[1, 2 * 2, 3 + 3]`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+	program, err := p.ParseProgram()
+	require.NoError(t, err)
+
+	require.Equal(t, 1, len(program.Statements))
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	array, ok := stmt.Expression.(*ast.ArrayLiteral)
+	require.True(t, ok)
+	require.Equal(t, 3, len(array.Elements))
+
+	testLiteralExpression(t, 1, array.Elements[0])
+	testInfixExpression(t, 2, "*", 2, array.Elements[1])
+	testInfixExpression(t, 3, "+", 3, array.Elements[2])
+}
+
+func TestParsingIndexExpression(t *testing.T) {
+	input := `myArray[1 + 1];`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+	program, err := p.ParseProgram()
+	require.NoError(t, err)
+
+	require.Len(t, program.Statements, 1)
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok)
+
+	indexExpr, ok := stmt.Expression.(*ast.IndexExpression)
+	require.True(t, ok)
+	testIdentifier(t, "myArray", indexExpr.Left)
+	testInfixExpression(t, 1, "+", 1, indexExpr.Index)
 }
 
 func testBoolean(t *testing.T, expected bool, exp ast.Expression) {
