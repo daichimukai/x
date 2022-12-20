@@ -5,6 +5,7 @@ use crate::connection::Connection;
 use crate::event::Event;
 use crate::event_queue::EventQueue;
 use crate::state::State;
+use crate::packets::message::Message;
 
 // event driven state machine
 #[derive(Debug)]
@@ -23,7 +24,7 @@ impl Peer {
             state,
             event_queue,
             tcp_connection: None,
-            config
+            config,
         }
     }
 
@@ -43,21 +44,33 @@ impl Peer {
 
     async fn handle_event(&mut self, event: Event) {
         match &self.state {
-            State::Idle => {
-                match event {
-                    Event::ManualStart => {
-                        self.tcp_connection = Connection::connect(&self.config).await.ok();
-                        if self.tcp_connection.is_some() {
-                            self.event_queue.enqueue(Event::TcpConnectionConfirmed);
-                        } else {
-                            panic!("failed to establish TCP Connection: {:?}", self.config)
-                        }
-                        self.state = State::Connect;
+            State::Idle => match event {
+                Event::ManualStart => {
+                    self.tcp_connection = Connection::connect(&self.config).await.ok();
+                    if self.tcp_connection.is_some() {
+                        self.event_queue.enqueue(Event::TcpConnectionConfirmed);
+                    } else {
+                        panic!("failed to establish TCP Connection: {:?}", self.config)
                     }
-                    _ => {}
+                    self.state = State::Connect;
                 }
+                _ => {},
+            },
+            State::Connect => match event {
+                Event::TcpConnectionConfirmed => {
+                    self.tcp_connection.as_mut().expect("tcp connection is not established")
+                        .send(Message::new_open(
+                                self.config.local_as,
+                                self.config.local_ip,
+                                ))
+                        .await;
+                    self.state = State::OpenSent;
+                },
+                _ => {},
             }
-            _ => {}
+            State::OpenSent => {
+                todo!();
+            },
         }
     }
 }
@@ -69,7 +82,7 @@ mod tests {
 
     #[tokio::test]
     async fn peer_can_transition_to_connect_state() {
-        let config : Config = "64512 127.0.0.1 64513 127.0.0.2 active".parse().unwrap();
+        let config: Config = "64512 127.0.0.1 64513 127.0.0.2 active".parse().unwrap();
         let mut peer = Peer::new(config);
         peer.start();
 
@@ -84,5 +97,26 @@ mod tests {
         tokio::time::sleep(Duration::from_secs(1)).await;
         peer.next().await;
         assert_eq!(peer.state, State::Connect);
+    }
+
+    #[tokio::test]
+    async fn peer_can_transition_to_opensent_state() {
+        let config: Config = "64512 127.0.0.1 64513 127.0.0.2 active".parse().unwrap();
+        let mut peer = Peer::new(config);
+        peer.start();
+
+        tokio::spawn(async move {
+            let remote_config = "64513 127.0.0.2 64512 127.0.0.1 passive".parse().unwrap();
+            let mut remote_peer = Peer::new(remote_config);
+            remote_peer.start();
+            remote_peer.next().await;
+            remote_peer.next().await;
+        });
+
+        // wait to ensure that the `remote_peer` does its job before the `peer`.
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        peer.next().await;
+        peer.next().await;
+        assert_eq!(peer.state, State::OpenSent);
     }
 }
