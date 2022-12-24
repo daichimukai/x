@@ -31,6 +31,6 @@ async fn main() {
         handles.push(handle);
     }
     for handle in handles {
-        handle.await;
+        let _ = handle.await;
     }
 }

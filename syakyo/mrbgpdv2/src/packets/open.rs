@@ -1,6 +1,6 @@
 use std::net::Ipv4Addr;
 
-use super::header::{self, Header, MessageType};
+use super::header::{Header, MessageType};
 use crate::bgp_type::{AutonomousSystemNumber, HoldTime, Version};
 use crate::error::ConvertBytesToBgpMessageError;
 

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use tokio::net::{TcpListener, TcpStream};
 use bytes::{BufMut, BytesMut};
-use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{self, AsyncWriteExt};
 
 use crate::config::{Config, Mode};
 use crate::error::CreateConnectionError;
@@ -26,7 +26,7 @@ impl Connection {
 
     pub async fn send(&mut self, message: Message) {
         let bytes: BytesMut = message.into();
-        self.conn.write_all(&bytes[..]).await;
+        let _ = self.conn.write_all(&bytes[..]).await;
     }
 
     async fn connect_to_remote_peer(config: &Config) -> Result<TcpStream> {
@@ -57,5 +57,39 @@ impl Connection {
                 config.local_ip, bgp_port,
             ))?
             .0)
+    }
+
+    pub async fn get_message(&mut self) -> Option<Message> {
+        self.read_data_from_tcp_connection().await;
+        let buffer = self.split_buffer_at_message_separator()?;
+        Message::try_from(buffer).ok()
+    }
+
+    async fn read_data_from_tcp_connection(&mut self) {
+        loop {
+            let mut buf: Vec<u8> = vec![];
+            match self.conn.try_read_buf(&mut buf) {
+                Ok(0) => (),
+                Ok(_n) => self.buffer.put(&buf[..]),
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => break,
+                Err(e) => panic!("failed to read data from tcp connection: {:?}", e),
+            }
+        }
+    }
+
+    fn split_buffer_at_message_separator(&mut self) -> Option<BytesMut> {
+        let index = self.get_index_of_message_separator().ok()?;
+        if self.buffer.len() < index {
+            return None;
+        }
+        Some(self.buffer.split_to(index))
+    }
+
+    fn get_index_of_message_separator(&self) -> Result<usize> {
+        let minimum_message_length = 19;
+        if self.buffer.len() < minimum_message_length {
+            return Err(anyhow::anyhow!("too short bytes"));
+        }
+        Ok(u16::from_be_bytes([self.buffer[16], self.buffer[17]]) as usize)
     }
 }

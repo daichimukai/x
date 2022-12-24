@@ -1,7 +1,7 @@
 use bytes::{BufMut, BytesMut};
 
 use crate::error::{
-    ConvertBgpMessageToBytesError, ConvertBytesToBgpMessageError,
+    ConvertBytesToBgpMessageError,
 };
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]
@@ -23,7 +23,7 @@ impl TryFrom<BytesMut> for Header {
     type Error = ConvertBytesToBgpMessageError;
 
     fn try_from(bytes: BytesMut) -> Result<Self, Self::Error> {
-        let marker = &bytes[0..16];
+        let _marker = &bytes[0..16];
         let length = u16::from_be_bytes([bytes[16], bytes[17]]);
         let type_ = bytes[18].try_into()?;
 
@@ -52,6 +52,7 @@ impl From<Header> for BytesMut {
 #[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
 pub enum MessageType {
     Open,
+    KeepAlive,
 }
 
 impl TryFrom<u8> for MessageType {
@@ -60,6 +61,7 @@ impl TryFrom<u8> for MessageType {
     fn try_from(num: u8) -> Result<Self, Self::Error> {
         match num {
             1 => Ok(MessageType::Open),
+            4 => Ok(MessageType::KeepAlive),
             _ => {
                 Err(Self::Error::from(anyhow::anyhow!(
                             "failed to convert {} to BGP message type (expected 1-4)",
@@ -73,6 +75,7 @@ impl From<MessageType> for u8 {
     fn from(type_: MessageType) -> Self {
         match type_ {
             MessageType::Open => 1,
+            MessageType::KeepAlive => 4,
         }
     }
 }
