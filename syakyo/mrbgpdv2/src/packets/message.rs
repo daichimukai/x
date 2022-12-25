@@ -3,10 +3,10 @@ use std::net::Ipv4Addr;
 use bytes::BytesMut;
 
 use crate::bgp_type::AutonomousSystemNumber;
-use crate::error::{ConvertBytesToBgpMessageError};
-use crate::packets::open::OpenMessage;
+use crate::error::ConvertBytesToBgpMessageError;
 use crate::packets::header::{Header, MessageType};
 use crate::packets::keepalive::KeepAliveMessage;
+use crate::packets::open::OpenMessage;
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]
 pub enum Message {

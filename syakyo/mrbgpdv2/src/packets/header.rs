@@ -1,8 +1,6 @@
 use bytes::{BufMut, BytesMut};
 
-use crate::error::{
-    ConvertBytesToBgpMessageError,
-};
+use crate::error::ConvertBytesToBgpMessageError;
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]
 pub struct Header {
@@ -12,10 +10,7 @@ pub struct Header {
 
 impl Header {
     pub fn new(length: u16, type_: MessageType) -> Self {
-        Self {
-            length,
-            type_,
-        }
+        Self { length, type_ }
     }
 }
 
@@ -27,10 +22,7 @@ impl TryFrom<BytesMut> for Header {
         let length = u16::from_be_bytes([bytes[16], bytes[17]]);
         let type_ = bytes[18].try_into()?;
 
-        Ok(Header {
-            length,
-            type_,
-        })
+        Ok(Header { length, type_ })
     }
 }
 
@@ -62,11 +54,10 @@ impl TryFrom<u8> for MessageType {
         match num {
             1 => Ok(MessageType::Open),
             4 => Ok(MessageType::KeepAlive),
-            _ => {
-                Err(Self::Error::from(anyhow::anyhow!(
-                            "failed to convert {} to BGP message type (expected 1-4)",
-                            num)))
-            },
+            _ => Err(Self::Error::from(anyhow::anyhow!(
+                "failed to convert {} to BGP message type (expected 1-4)",
+                num
+            ))),
         }
     }
 }

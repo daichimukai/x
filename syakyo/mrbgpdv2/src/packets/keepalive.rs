@@ -1,7 +1,7 @@
 use bytes::BytesMut;
 
-use crate::error::ConvertBytesToBgpMessageError;
 use super::header::{Header, MessageType};
+use crate::error::ConvertBytesToBgpMessageError;
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]
 pub struct KeepAliveMessage {

@@ -20,10 +20,7 @@ pub struct OpenMessage {
 }
 
 impl OpenMessage {
-    pub fn new(
-        my_as_number: AutonomousSystemNumber,
-        my_ip_addr: Ipv4Addr,
-    ) -> Self {
+    pub fn new(my_as_number: AutonomousSystemNumber, my_ip_addr: Ipv4Addr) -> Self {
         let header = Header::new(29, MessageType::Open);
         Self {
             header,
@@ -43,17 +40,20 @@ impl TryFrom<BytesMut> for OpenMessage {
     fn try_from(bytes: BytesMut) -> Result<Self, Self::Error> {
         let header = Header::try_from(BytesMut::from(&bytes[0..19]))?;
         let version: Version = bytes[19].try_into()?;
-        let my_as_number = AutonomousSystemNumber::from(
-            u16::from_be_bytes(bytes[20..22].try_into().context(format!(
-                            "failed to convert from bytes `{:?}` to AS number",
-                            &bytes[20..22],
-                            ))?));
-        let hold_time = HoldTime::from(
-            u16::from_be_bytes(bytes[22..24].try_into().context(format!(
-                        "failed to convert from bytes `{:?}` to hold time",
-                        &bytes[22..24],
-                        ))?));
-        let b: [u8; 4] = bytes[24..28].try_into()
+        let my_as_number = AutonomousSystemNumber::from(u16::from_be_bytes(
+            bytes[20..22].try_into().context(format!(
+                "failed to convert from bytes `{:?}` to AS number",
+                &bytes[20..22],
+            ))?,
+        ));
+        let hold_time = HoldTime::from(u16::from_be_bytes(bytes[22..24].try_into().context(
+            format!(
+                "failed to convert from bytes `{:?}` to hold time",
+                &bytes[22..24],
+            ),
+        )?));
+        let b: [u8; 4] = bytes[24..28]
+            .try_into()
             .context("failed to get octets of the IP address")?;
         let bgp_identifier = Ipv4Addr::from(b);
         let optional_parameter_length = bytes[28];

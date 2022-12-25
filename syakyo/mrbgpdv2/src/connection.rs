@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
-use tokio::net::{TcpListener, TcpStream};
 use bytes::{BufMut, BytesMut};
 use tokio::io::{self, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
 use crate::config::{Config, Mode};
 use crate::error::CreateConnectionError;
