@@ -6,9 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.14.0", features = ["full"] }
-thiserror = "1.0"
 anyhow = "1.0"
+bytes = "1"
+futures = "0.3.11"
+ipnetwork = "0.18.0"
+rtnetlink = "0.9.0"
+thiserror = "1.0"
+tokio = { version = "1.14.0", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.2"
-bytes = "1"

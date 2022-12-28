@@ -3,6 +3,7 @@
 
 pub mod config;
 pub mod peer;
+pub mod routing;
 
 mod bgp_type;
 mod connection;
