@@ -5,7 +5,7 @@
 [core]
   abbrev = 12
   whitespace = trailing-space
-  editor = vim
+  editor = nvim
 
 [color]
   status = auto
@@ -20,14 +20,15 @@
 [pull]
   rebase = true
 
-[push]
-  default = simple
-
 [alias]
-  graph = log --graph --date=short --decorate=short --pretty=format:'%Cgreen%h %Creset%cd %Cblue%cn %Cred%d %Creset%s'
+  cm = commit
+  co = checkout
+  difff = diff --word-diff
   gr = log --graph --date=short --decorate=short --pretty=format:'%Cgreen%h %Creset%cd %Cblue%cn %Cred%d %Creset%s'
+  graph = log --graph --date=short --decorate=short --pretty=format:'%Cgreen%h %Creset%cd %Cblue%cn %Cred%d %Creset%s'
+  pushf = push --force-with-lease
   st = status
   stt = status -uno
-  cm = commit
-  difff = diff --word-diff
-  co = checkout
+
+[include]
+  path = ~/.gitconfig.local
