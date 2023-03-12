@@ -5,7 +5,9 @@ import (
 	"io"
 	"os"
 	"sort"
+	"syscall"
 	"time"
+	"unsafe"
 )
 
 const targetFilenameFormat = "teio.%d"
@@ -14,12 +16,18 @@ type Job struct {
 	id        int
 	blockSize int
 	fileSize  int
+	directIO  bool
 	fp        *os.File
 }
 
-func NewJob(id int, blockSize int, fileSize int) (*Job, error) {
+func NewJob(id int, blockSize int, fileSize int, directIO bool) (*Job, error) {
 	filename := fmt.Sprintf(targetFilenameFormat, id)
-	fp, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_TRUNC|os.O_SYNC, 0644)
+
+	oFlag := os.O_CREATE | os.O_RDWR | os.O_TRUNC
+	if directIO {
+		oFlag |= syscall.O_DIRECT
+	}
+	fp, err := os.OpenFile(filename, oFlag, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -28,6 +36,7 @@ func NewJob(id int, blockSize int, fileSize int) (*Job, error) {
 		id:        id,
 		blockSize: blockSize,
 		fileSize:  fileSize,
+		directIO:  directIO,
 		fp:        fp,
 	}, nil
 }
@@ -36,7 +45,7 @@ func (j *Job) Do() (*JobResult, error) {
 	count := j.fileSize / j.blockSize
 	lats := make([]time.Duration, count)
 
-	b := make([]byte, j.blockSize)
+	b := makeAlignedSlice(j.blockSize, 4096)
 	for i := 0; i < count; i++ {
 		start := time.Now()
 		_, err := j.fp.Write(b[:])
@@ -79,4 +88,19 @@ func (j JobResult) PrettyPrint(w io.Writer) {
 	fmt.Fprintf(w, "    50%%: %d usec\n", j.lats[count/2].Microseconds())
 	fmt.Fprintf(w, "    90%%: %d usec\n", j.lats[count*90/100].Microseconds())
 	fmt.Fprintf(w, "    99%%: %d usec\n", j.lats[count*99/100].Microseconds())
+}
+
+// makeAlignedSlice returns a slice with @size bytes that aligned to
+// @alignment. This is needed since syscalls for fd with O_DIRECT may require
+// an alignment limitation for a user-space buffer that varies by filesystems
+// and kernels.
+func makeAlignedSlice(size int, alignment int) []byte {
+	buf := make([]byte, size+alignment)
+	violation := uintptr(unsafe.Pointer(unsafe.SliceData(buf))) & uintptr(alignment-1)
+	if violation == 0 {
+		return buf[:size]
+	}
+	start := alignment - int(violation)
+	end := start + size
+	return buf[start:end]
 }

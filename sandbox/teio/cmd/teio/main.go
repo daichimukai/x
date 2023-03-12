@@ -12,12 +12,13 @@ var (
 	numJobs   = flag.Int("num-jobs", 1, "the number of jobs which run concurrently")
 	blockSize = flag.Int("block-size", 4096, "size of I/O unit")
 	fileSize  = flag.Int("file-size", 1*1024*1024, "do I/Os up to this size in bytes")
+	directIO  = flag.Bool("direct", false, "do direct IO")
 )
 
 func main() {
 	flag.Parse()
 
-	s, err := teio.NewScenario(*numJobs, *blockSize, *fileSize)
+	s, err := teio.NewScenario(*numJobs, *blockSize, *fileSize, *directIO)
 	if err != nil {
 		log.Fatalf("failed to initialize a scenario: %v", err)
 	}
