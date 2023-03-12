@@ -21,11 +21,11 @@ type Scenario struct {
 	jobs []*Job
 }
 
-func NewScenario(numJobs, blockSize, fileSize int, directIO bool) (*Scenario, error) {
+func NewScenario(numJobs, blockSize, fileSize int, directIO bool, ioType IOType) (*Scenario, error) {
 	jobs := make([]*Job, numJobs)
 
 	for i := 0; i < numJobs; i++ {
-		job, err := NewJob(i, blockSize, fileSize, directIO)
+		job, err := NewJob(i, blockSize, fileSize, directIO, ioType)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create job: %w", err)
 		}

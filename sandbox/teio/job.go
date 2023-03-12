@@ -10,6 +10,13 @@ import (
 	"unsafe"
 )
 
+type IOType int
+
+const (
+	IOTypeRead IOType = iota
+	IOTypeWrite
+)
+
 const targetFilenameFormat = "teio.%d"
 
 type Job struct {
@@ -17,10 +24,11 @@ type Job struct {
 	blockSize int
 	fileSize  int
 	directIO  bool
+	ioType    IOType
 	fp        *os.File
 }
 
-func NewJob(id int, blockSize int, fileSize int, directIO bool) (*Job, error) {
+func NewJob(id int, blockSize int, fileSize int, directIO bool, ioType IOType) (*Job, error) {
 	filename := fmt.Sprintf(targetFilenameFormat, id)
 
 	oFlag := os.O_CREATE | os.O_RDWR | os.O_TRUNC
@@ -32,32 +40,74 @@ func NewJob(id int, blockSize int, fileSize int, directIO bool) (*Job, error) {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
+	if err := fp.Truncate(int64(fileSize)); err != nil {
+		return nil, fmt.Errorf("failed to truncate file: %w", err)
+	}
+
 	return &Job{
 		id:        id,
 		blockSize: blockSize,
 		fileSize:  fileSize,
 		directIO:  directIO,
+		ioType:    ioType,
 		fp:        fp,
 	}, nil
 }
 
-func (j *Job) Do() (*JobResult, error) {
-	count := j.fileSize / j.blockSize
+func doWrite(fp *os.File, blockSize, count int) ([]time.Duration, error) {
 	lats := make([]time.Duration, count)
 
-	b := makeAlignedSlice(j.blockSize, 4096)
+	b := makeAlignedSlice(blockSize, 4096)
 	for i := 0; i < count; i++ {
 		start := time.Now()
-		_, err := j.fp.Write(b[:])
+		_, err := fp.Write(b[:])
 		if err != nil {
-			return &JobResult{err: err}, err
+			return nil, err
 		}
 		end := time.Now()
 		lats[i] = end.Sub(start)
 	}
-	sort.Slice(lats, func(i, j int) bool { return lats[i] < lats[j] })
 
-	j.fp.Close()
+	return lats, nil
+}
+
+func doRead(fp *os.File, blockSize, count int) ([]time.Duration, error) {
+	lats := make([]time.Duration, count)
+
+	b := make([]byte, count)
+	for i := 0; i < count; i++ {
+		start := time.Now()
+		_, err := fp.Read(b[:])
+		if err != nil {
+			return nil, err
+		}
+		end := time.Now()
+		lats[i] = end.Sub(start)
+	}
+
+	return lats, nil
+}
+
+func (j *Job) Do() (*JobResult, error) {
+	defer j.fp.Close()
+
+	count := j.fileSize / j.blockSize
+
+	var f func(*os.File, int, int) ([]time.Duration, error)
+	switch j.ioType {
+	case IOTypeRead:
+		f = doRead
+	case IOTypeWrite:
+		f = doWrite
+	default:
+		panic("unreachable")
+	}
+
+	lats, err := f(j.fp, j.blockSize, count)
+	if err != nil {
+		return &JobResult{err: err}, err
+	}
+	sort.Slice(lats, func(i, j int) bool { return lats[i] < lats[j] })
 
 	return &JobResult{job: j, lats: lats}, nil
 }
