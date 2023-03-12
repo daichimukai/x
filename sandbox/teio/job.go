@@ -10,11 +10,12 @@ import (
 	"unsafe"
 )
 
+//go:generate stringer -type=IOType -linecomment
 type IOType int
 
 const (
-	IOTypeRead IOType = iota
-	IOTypeWrite
+	IOTypeRead  IOType = iota // read
+	IOTypeWrite               // write
 )
 
 const targetFilenameFormat = "teio.%d"
@@ -130,6 +131,8 @@ func (j JobResult) PrettyPrint(w io.Writer) {
 	iops := float64(count) / float64(latSum.Microseconds()) * 1000 * 1000
 
 	fmt.Fprintf(w, "job%d: \n", j.job.id)
+	fmt.Fprintf(w, "  IO type: %s\n", j.job.ioType)
+	fmt.Fprintf(w, "  direct IO: %v\n", j.job.directIO)
 	fmt.Fprintf(w, "  block size: %d byte\n", j.job.blockSize)
 	fmt.Fprintf(w, "  total bytes written: %.02f MiB\n", writtenMiB)
 	fmt.Fprintf(w, "  throughput: %.02f MiB/s, %.02f IOPS\n", throughputMiBs, iops)
