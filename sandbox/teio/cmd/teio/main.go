@@ -45,7 +45,7 @@ func (j *Job) Do() (*JobResult, error) {
 	for i := 0; i < count; i++ {
 		start := time.Now()
 		_, err := j.fp.Write(b[:])
-		if err != nil && err != io.ErrShortWrite {
+		if err != nil {
 			return nil, err
 		}
 		end := time.Now()
