@@ -3,7 +3,7 @@
 set -eu
 
 # `set -e' requires that following environment variables are set.
-dirs_env="HOME"
+dirs_env="HOME XDG_CONFIG_HOME"
 
 for d in ${dirs_env}; do
 	for f in $(find ${d} -type f); do
