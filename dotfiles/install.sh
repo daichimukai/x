@@ -2,6 +2,8 @@
 
 set -eu
 
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
+
 # `set -e' requires that following environment variables are set.
 dirs_env="HOME XDG_CONFIG_HOME"
 
