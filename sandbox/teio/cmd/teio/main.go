@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"sync"
 
 	"github.com/daichimukai/x/sandbox/teio"
 )
@@ -18,37 +17,13 @@ var (
 func main() {
 	flag.Parse()
 
-	jobs := make([]*teio.Job, *numJobs)
-	results := make([]*teio.JobResult, *numJobs)
-
-	for i := 0; i < *numJobs; i++ {
-		job, err := teio.NewJob(i, *blockSize, *fileSize)
-		if err != nil {
-			log.Fatal(err)
-		}
-		jobs[i] = job
+	s, err := teio.NewScenario(*numJobs, *blockSize, *fileSize)
+	if err != nil {
+		log.Fatalf("failed to initialize a scenario: %v", err)
 	}
-
-	startCh := make(chan struct{})
-	var wg sync.WaitGroup
-	for i, job := range jobs {
-		wg.Add(1)
-		go func(i int, job *teio.Job) {
-			<-startCh
-
-			result, err := job.Do()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			results[i] = result
-			wg.Done()
-		}(i, job)
+	r, err := s.Do()
+	if err != nil {
+		log.Fatalf("failed to complate the scenario: %v", err)
 	}
-	close(startCh)
-	wg.Wait()
-
-	for _, result := range results {
-		result.PrettyPrint(os.Stdout)
-	}
+	r.PrettyPrint(os.Stdout)
 }

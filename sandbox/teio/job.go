@@ -41,7 +41,7 @@ func (j *Job) Do() (*JobResult, error) {
 		start := time.Now()
 		_, err := j.fp.Write(b[:])
 		if err != nil {
-			return nil, err
+			return &JobResult{err: err}, err
 		}
 		end := time.Now()
 		lats[i] = end.Sub(start)
@@ -54,9 +54,10 @@ func (j *Job) Do() (*JobResult, error) {
 }
 
 type JobResult struct {
-	job *Job
-
+	job  *Job
 	lats []time.Duration
+
+	err error
 }
 
 func (j JobResult) PrettyPrint(w io.Writer) {
