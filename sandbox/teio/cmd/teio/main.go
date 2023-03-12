@@ -14,8 +14,7 @@ import (
 const (
 	targetFilenameFormat = "teio.%d"
 
-	blockSize = 4096
-	fileSize  = 1 * 1024 * 1024
+	fileSize = 1 * 1024 * 1024
 )
 
 type Job struct {
@@ -25,7 +24,7 @@ type Job struct {
 	fp        *os.File
 }
 
-func NewJob(id int) (*Job, error) {
+func NewJob(id int, blockSize int) (*Job, error) {
 	filename := fmt.Sprintf(targetFilenameFormat, id)
 	fp, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_TRUNC|os.O_SYNC, 0644)
 	if err != nil {
@@ -41,10 +40,10 @@ func NewJob(id int) (*Job, error) {
 }
 
 func (j *Job) Do() (*JobResult, error) {
-	count := fileSize / blockSize
+	count := fileSize / j.blockSize
 	lats := make([]time.Duration, count)
 
-	var b [blockSize]byte
+	b := make([]byte, j.blockSize)
 	for i := 0; i < count; i++ {
 		start := time.Now()
 		_, err := j.fp.Write(b[:])
@@ -89,7 +88,8 @@ func (j JobResult) PrettyPrint(w io.Writer) {
 }
 
 var (
-	numJobs = flag.Int("num-jobs", 1, "the number of jobs which run concurrently")
+	numJobs   = flag.Int("num-jobs", 1, "the number of jobs which run concurrently")
+	blockSize = flag.Int("block-size", 4096, "size of I/O unit")
 )
 
 func main() {
@@ -99,7 +99,7 @@ func main() {
 	results := make([]*JobResult, *numJobs)
 
 	for i := 0; i < *numJobs; i++ {
-		job, err := NewJob(i)
+		job, err := NewJob(i, *blockSize)
 		if err != nil {
 			log.Fatal(err)
 		}
