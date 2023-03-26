@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# checkout default branch of git repository hosted on GitHub
+
+if ! which git >/dev/null 2>/dev/null; then
+	echo "need gh command" >&2
+	exit 1
+fi
+
+set -eu
+
+name_with_owner=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+if [ -z $name_with_owner ]; then
+	echo "failed to get a git repository name" >&2
+	exit 1
+fi
+
+default_branch=$(gh api /repos/$name_with_owner --jq '.default_branch')
+if [ -z $default_branch ]; then
+	echo "failed to get a default branch" >&2
+	exit 1
+fi
+
+git checkout $default_branch
