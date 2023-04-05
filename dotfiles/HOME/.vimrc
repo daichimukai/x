@@ -53,6 +53,11 @@ nnoremap <silent> ]b :bnext<CR>
 nnoremap <silent> [B :bfirst<CR>
 nnoremap <silent> ]B :blast<CR>
 
+nnoremap <silent> [q :<C-u>cprevious<CR>
+nnoremap <silent> ]q :<C-u>cnext<CR>
+nnoremap <silent> [Q :<C-u>cfirst<CR>
+nnoremap <silent> ]Q :<C-u>clast<CR>
+
 nnoremap <silent> <C-p> :Files<CR>
 
 function! s:on_lsp_buffer_enabled() abort
