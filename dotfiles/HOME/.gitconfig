@@ -5,7 +5,7 @@
 [core]
   abbrev = 12
   whitespace = trailing-space
-  editor = nvim
+  editor = vim
 
 [color]
   status = auto
