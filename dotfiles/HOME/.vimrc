@@ -6,6 +6,7 @@ Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 Plug 'mattn/vim-lsp-icons'
 
+Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
 
 Plug 'mattn/vim-goimports'
