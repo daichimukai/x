@@ -27,6 +27,7 @@ set cursorline
 set laststatus=2
 set hls
 set ttimeoutlen=10
+set formatoptions+=mBj
 
 hi User1 ctermfg=green ctermbg=black
 hi User2 ctermfg=yellow ctermbg=black
