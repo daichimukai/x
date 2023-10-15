@@ -32,3 +32,6 @@
 
 [include]
   path = ~/.gitconfig.local
+
+[credential "https://github.com"]
+	helper = !gh auth git-credential

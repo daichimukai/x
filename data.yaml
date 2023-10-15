@@ -1,0 +1,33 @@
+books:
+  - name: "雨宮さん (1)"
+    author: "あらゐけいいち"
+    cover: "https://cover.openbd.jp/9784098515370.jpg"
+    finishReadingAt:
+      year: 2023
+      month: 2
+      day: 1
+    isbn: "9784098515370"
+links:
+  - name: Xorshift RNGs | Journal of Statistical Software
+    accessedAt:
+      year: 2023
+      month: 2
+      day: 12
+    comment: >-
+      <p>
+        xorshift の原点。
+        有限体 $F_2$ 上の線形代数だった。
+      </p>
+      <p>
+        $k = F_2$ とすると、$n$ bit のデータは $k^n$ の元と同一視できる。
+        $k$ 上の加算は xor である。shift は $k^n$ 上の singular linear transformation になるとわかる。
+        $L(m)$ を左 $m$ bit シフトとすると、$k^n$ 上で $T(m) = \textrm{id} + L(m)$ が正則なので、
+        この操作からできる正則変換を繰り返して $k^n$ のベクトルの列を作れる。
+        $a, b, c$ をうまく選べば、$T(a)T(b)T(c)$ が生成するベクトル列を擬似乱数になるようにできると
+        いう話だった。
+      </p>
+      <p>
+        線形変換を繰り返しているので xorshift で得られた連続する $n$ 個の乱数は $k^n$ 上で一次独立に
+        なってしまうという話が面白かった。
+      </p>
+    url: https://www.jstatsoft.org/article/view/v008i14
